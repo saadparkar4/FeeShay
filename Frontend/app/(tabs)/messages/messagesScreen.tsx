@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, FlatList, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Button } from "react-native";
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from "react-native";
 import { MessageListItem } from "../../../components/MessageListItem";
 import { messages } from "../../../dummyData";
 import { Ionicons } from "@expo/vector-icons";

@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 import React from "react";
-import { StyleSheet } from "react-native";
+// import { StyleSheet } from "react-native";
 
 const profileLayout = () => {
     return <Stack screenOptions={{ headerShown: true, headerTitle: "Profile" }} />;
@@ -8,4 +8,4 @@ const profileLayout = () => {
 
 export default profileLayout;
 
-const styles = StyleSheet.create({});
+// const styles = StyleSheet.create({});
