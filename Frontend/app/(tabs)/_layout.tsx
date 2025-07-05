@@ -10,6 +10,7 @@ export default function TabLayout() {
                 headerShadowVisible: false,
                 headerTintColor: "#222",
                 tabBarStyle: { backgroundColor: "#fff" },
+                headerShown: false,
             }}
         >
             <Tabs.Screen
@@ -37,6 +38,7 @@ export default function TabLayout() {
                 name="profile"
                 options={{
                     title: "Profile",
+                    href: "/profile/profileScreen",
                     tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? "person" : "person-outline"} color={color} size={24} />,
                 }}
             />

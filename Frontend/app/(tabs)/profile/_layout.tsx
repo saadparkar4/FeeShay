@@ -3,7 +3,7 @@ import React from "react";
 import { StyleSheet } from "react-native";
 
 const profileLayout = () => {
-    return <Stack screenOptions={{ headerShown: false }} />;
+    return <Stack screenOptions={{ headerShown: true, headerTitle: "Profile" }} />;
 };
 
 export default profileLayout;

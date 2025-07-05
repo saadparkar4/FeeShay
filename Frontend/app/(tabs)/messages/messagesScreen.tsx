@@ -1,11 +1,28 @@
-import React from "react";
-import { View, Text, FlatList, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from "react-native";
+import React, { useState } from "react";
+import { View, Text, FlatList, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Button } from "react-native";
 import { MessageListItem } from "../../../components/MessageListItem";
 import { messages } from "../../../dummyData";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
 export default function Index() {
+    const [allMessages, setAllMessages] = useState(messages);
+
+    const addNewChat = () => {
+        const newMessage = {
+            id: (allMessages.length + 1).toString(),
+            user: {
+                name: "New Contact",
+                avatar: undefined,
+                isOnline: true,
+            },
+            message: "Start a new conversation...",
+            time: "Now",
+            isUnread: false,
+        };
+        setAllMessages([newMessage, ...allMessages]);
+    };
+
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
@@ -19,19 +36,21 @@ export default function Index() {
             </View>
 
             <ScrollView>
-                <TouchableOpacity>
-                    <MessageListItem message={messages[0]} />
-                </TouchableOpacity>
-                <TouchableOpacity>
-                    <MessageListItem message={messages[1]} />
-                </TouchableOpacity>
-                <TouchableOpacity>
-                    <MessageListItem message={messages[2]} />
-                </TouchableOpacity>
-                <TouchableOpacity>
-                    <MessageListItem message={messages[3]} />
-                </TouchableOpacity>
+                {allMessages.map((message) => (
+                    <TouchableOpacity
+                        key={message.id}
+                        onPress={() => {
+                            router.push({ pathname: "/messages/[id]", params: { id: message.id } });
+                        }}
+                    >
+                        <MessageListItem message={message} />
+                    </TouchableOpacity>
+                ))}
             </ScrollView>
+
+            <TouchableOpacity style={styles.addButton} onPress={addNewChat} activeOpacity={0.8}>
+                <Ionicons name="add" size={24} color="#fff" />
+            </TouchableOpacity>
         </SafeAreaView>
     );
 }
@@ -77,5 +96,24 @@ const styles = StyleSheet.create({
         color: "#fff",
         fontSize: 12,
         fontWeight: "bold",
+    },
+    addButton: {
+        position: "absolute",
+        bottom: 30,
+        right: 20,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: "#FF2D8B",
+        justifyContent: "center",
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8,
     },
 });

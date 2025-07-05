@@ -69,3 +69,93 @@ export const messages: Message[] = [
         isUnread: false,
     },
 ];
+
+export type JobStatus = "Active" | "Completed" | "In Progress";
+
+export interface JobPost {
+    id: string;
+    title: string;
+    description: string;
+    status: JobStatus;
+    dateLabel: string;
+    dateValue: string;
+    actions: { label: string; icon: string; onPress?: () => void }[];
+}
+
+export const jobPosts: JobPost[] = [
+    {
+        id: "1",
+        title: "Social Media Campaign",
+        description: "Looking for a social media expert to manage our platforms...",
+        status: "Active",
+        dateLabel: "Posted",
+        dateValue: "3 days ago",
+        actions: [
+            { label: "Edit", icon: "edit-2" },
+            { label: "Delete", icon: "trash-2" },
+        ],
+    },
+    {
+        id: "2",
+        title: "Website Content Writer",
+        description: "Hired a content writer to create engaging articles for our blog...",
+        status: "Completed",
+        dateLabel: "Completed",
+        dateValue: "2 weeks ago",
+        actions: [{ label: "View", icon: "eye" }],
+    },
+    {
+        id: "3",
+        title: "Logo Redesign Project",
+        description: "Working with a designer to refresh our company logo...",
+        status: "In Progress",
+        dateLabel: "Started",
+        dateValue: "1 week ago",
+        actions: [{ label: "Chat", icon: "message-circle" }],
+    },
+];
+
+export interface Service {
+    id: string;
+    title: string;
+    description: string;
+    dateLabel: string;
+    dateValue: string;
+    actions: { label: string; icon: string; onPress?: () => void }[];
+}
+
+export const services: Service[] = [
+    {
+        id: "1",
+        title: "Logo Design",
+        description: "Professional logo design for your business or brand.",
+        dateLabel: "Added",
+        dateValue: "2 days ago",
+        actions: [
+            { label: "Edit", icon: "edit-2" },
+            { label: "Delete", icon: "trash-2" },
+        ],
+    },
+    {
+        id: "2",
+        title: "SEO Optimization",
+        description: "Improve your website ranking with expert SEO services.",
+        dateLabel: "Added",
+        dateValue: "1 week ago",
+        actions: [
+            { label: "Edit", icon: "edit-2" },
+            { label: "Delete", icon: "trash-2" },
+        ],
+    },
+    {
+        id: "3",
+        title: "Content Writing",
+        description: "High-quality content writing for blogs, websites, and more.",
+        dateLabel: "Added",
+        dateValue: "3 weeks ago",
+        actions: [
+            { label: "Edit", icon: "edit-2" },
+            { label: "Delete", icon: "trash-2" },
+        ],
+    },
+];
