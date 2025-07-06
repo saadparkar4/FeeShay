@@ -8,7 +8,7 @@ interface FilterBarProps {
 	selected: ProposalFilter;
 	onSelect: (filter: ProposalFilter) => void;
 }
-
+//
 const FILTERS: ProposalFilter[] = ["Active", "Completed", "Cancelled"];
 
 export function FilterBar({ selected, onSelect }: FilterBarProps) {

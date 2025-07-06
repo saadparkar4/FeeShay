@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Modal, View, Text, FlatList, TouchableOpacity, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Freelancer } from "../FreelancerCard";
+import { Freelancer } from "./FreelancerCard";
 import { bookmarkModalStyles } from "../../assets/AppStyles";
 
 const bookmarkedFreelancers: Freelancer[] = [

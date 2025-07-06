@@ -13,7 +13,7 @@ export interface Freelancer {
 interface FreelancerCardProps {
 	freelancer: Freelancer;
 }
-
+//
 export function FreelancerCard({ freelancer }: FreelancerCardProps) {
 	return (
 		<View style={freelancerCardStyles.card}>

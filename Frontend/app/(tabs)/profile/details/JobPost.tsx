@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from "react-native";
 import { jobPosts, JobPost } from "../../../../models/dummyData";
 import { Feather } from "@expo/vector-icons";
-
+//
 const statusColors: Record<string, string> = {
 	Active: "#B6F5C3",
 	Completed: "#E5E7EB",

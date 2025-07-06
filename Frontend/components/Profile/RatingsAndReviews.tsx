@@ -9,7 +9,7 @@ interface Review {
 	rating: number; // Star rating
 	comment: string; // Review comment
 }
-
+//
 // Dummy data for reviews
 const dummyReviews: Review[] = [
 	{

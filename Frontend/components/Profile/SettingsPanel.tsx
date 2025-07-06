@@ -14,7 +14,7 @@ type SettingItem = {
 	textValue?: string; // For text type
 	actionLabel?: string; // For action type (e.g., Logout)
 };
-
+//
 // Dummy data for settings
 const dummySettings: SettingItem[] = [
 	{

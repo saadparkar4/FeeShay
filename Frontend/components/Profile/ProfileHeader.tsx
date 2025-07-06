@@ -95,5 +95,5 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 16,
 	},
 });
-
+//
 export default ProfileHeader;

@@ -1,5 +1,5 @@
 // import React from "react";
-// <!-- import { View, FlatList, StyleSheet } from "react-native";
+// import { View, FlatList, StyleSheet } from "react-native";
 // import { FreelancerCard, Freelancer } from "../../../components/FreelancerCard";
 
 // const mockFreelancers: Freelancer[] = [
@@ -32,7 +32,7 @@
 //     backgroundColor: "#fff",
 //     paddingHorizontal: 16,
 //   },
-// }); -->
+// });
 
 import { Text, View } from "react-native";
 

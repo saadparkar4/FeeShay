@@ -8,7 +8,7 @@ interface PersonalDetailsModel {
 	languages: string[]; // List of languages
 	memberSince: string; // Membership date
 }
-
+//
 // Dummy data for personal details
 const dummyDetails: PersonalDetailsModel = {
 	location: "New York, United States",

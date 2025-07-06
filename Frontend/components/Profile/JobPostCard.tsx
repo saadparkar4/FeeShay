@@ -8,7 +8,7 @@ interface JobPost {
 	posted: string; // When the job was posted
 	description: string; // Short job description
 }
-
+//
 // Dummy data for job posts
 const dummyJobs: JobPost[] = [
 	{

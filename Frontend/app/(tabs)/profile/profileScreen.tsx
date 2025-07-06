@@ -7,7 +7,7 @@ import JobPostCard from "../../../components/Profile/JobPostCard";
 import RatingsAndReviews from "../../../components/Profile/RatingsAndReviews";
 import SettingsPanel from "../../../components/Profile/SettingsPanel";
 import { router } from "expo-router";
-
+//
 const ProfileScreen = () => {
 	return (
 		<SafeAreaView style={{ flex: 1 }}>

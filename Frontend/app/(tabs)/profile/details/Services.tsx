@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from "react-native";
 import { services, Service } from "../../../../models/dummyData";
 import { Feather } from "@expo/vector-icons";
-
+//
 function ServiceCard({ service }: { service: Service }) {
 	return (
 		<View style={styles.card}>
