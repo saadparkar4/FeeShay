@@ -39,7 +39,7 @@ const dummySettings: SettingItem[] = [
 		iconColor: "crimson",
 		label: "Logout",
 		type: "action",
-		actionLabel: "Logout.",
+		actionLabel: "Logout",
 		// action: () => {/* handle logout */},
 	},
 ];
