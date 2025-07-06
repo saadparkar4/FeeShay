@@ -1,13 +1,24 @@
-import { router } from "expo-router";
 import React from "react";
-import { View, Text, Button } from "react-native";
+import { Button, ScrollView, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import ProfileHeader from "../../../components/Profile/ProfileHeader";
+import PersonalDetails from "../../../components/Profile/PersonalDetails";
+import JobPostCard from "../../../components/Profile/JobPostCard";
+import RatingsAndReviews from "../../../components/Profile/RatingsAndReviews";
+import SettingsPanel from "../../../components/Profile/SettingsPanel";
+import { router } from "expo-router";
 
-export default function ProfileTab() {
-    return (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-            <Text>Profile Tab</Text>
-            <Button title="Job Post" onPress={() => router.push("./details/JobPost ")} />
-            <Button title="Services" onPress={() => router.push("./details/Services")} />
-        </View>
-    );
-}
+const ProfileScreen = () => {
+	return (
+		<SafeAreaView style={{ flex: 1 }}>
+			<ScrollView contentContainerStyle={{ padding: 16 }}>
+				{" "}
+				<ProfileHeader /> <PersonalDetails /> <JobPostCard /> <RatingsAndReviews /> <SettingsPanel />{" "}
+				<Button title="Job Post" onPress={() => router.push("./details/JobPost ")} />
+				<Button title="Services" onPress={() => router.push("./details/Services")} />
+			</ScrollView>{" "}
+		</SafeAreaView>
+	);
+};
+
+export default ProfileScreen;
