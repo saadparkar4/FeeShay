@@ -1,5 +1,5 @@
 import React from "react";
-import { View, FlatList, StyleSheet } from "react-native";
+<!-- import { View, FlatList, StyleSheet } from "react-native";
 import { FreelancerCard, Freelancer } from "../../../components/FreelancerCard";
 
 const mockFreelancers: Freelancer[] = [
@@ -32,4 +32,19 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingHorizontal: 16,
   },
-});
+}); -->
+
+
+import { Text, View } from "react-native";
+
+const Index = () => {
+    return (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+            <Text>Home Tab</Text>
+        </View>
+    );
+};
+
+export default Index;
+
+// const styles = StyleSheet.create({});
