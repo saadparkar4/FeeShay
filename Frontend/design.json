@@ -1,0 +1,141 @@
+{
+    "designSystem": {
+      "name": "FeeShay Youthly UI",
+      "theme": {
+        "background": "#FFFFFF",
+        "textPrimary": "#2C2C2C",
+        "textSecondary": "#6D6D6D",
+        "accent": "#F72585",
+        "accentSecondary": "#7209B7",
+        "accentTertiary": "#4361EE",
+        "gradientPrimary": ["#F72585", "#7209B7"],
+        "cardShadow": "rgba(0, 0, 0, 0.05)",
+        "border": "#E2E8F0",
+        "muted": "#F1F3F9",
+        "placeholder": "#A9A9A9",
+        "success": "#22C55E",
+        "warning": "#FACC15",
+        "error": "#EF4444"
+      },
+      "typography": {
+        "fontFamily": "Poppins, Quicksand, Satoshi, sans-serif",
+        "fontSizes": {
+          "xs": "12px",
+          "sm": "14px",
+          "md": "16px",
+          "lg": "20px",
+          "xl": "24px",
+          "2xl": "30px"
+        },
+        "fontWeights": {
+          "light": 300,
+          "normal": 400,
+          "medium": 500,
+          "bold": 700
+        }
+      },
+      "components": {
+        "buttons": {
+          "default": {
+            "padding": "12px 20px",
+            "borderRadius": "999px",
+            "fontWeight": "bold",
+            "boxShadow": "0 2px 8px rgba(247, 37, 133, 0.25)",
+            "gradient": true
+          },
+          "secondary": {
+            "background": "#F1F3F9",
+            "color": "#2C2C2C",
+            "borderRadius": "999px"
+          }
+        },
+        "cards": {
+          "base": {
+            "background": "#FFFFFF",
+            "borderRadius": "24px",
+            "boxShadow": "0 4px 20px rgba(0,0,0,0.05)",
+            "padding": "16px"
+          }
+        },
+        "badges": {
+          "inProgress": {
+            "background": "#E0E7FF",
+            "color": "#4338CA"
+          },
+          "review": {
+            "background": "#F3E8FF",
+            "color": "#9333EA"
+          },
+          "skillTag": {
+            "background": "#F1F5F9",
+            "color": "#334155"
+          }
+        },
+        "navigation": {
+          "bottomTab": {
+            "background": "#FFFFFF",
+            "iconActiveColor": "#F72585",
+            "iconInactiveColor": "#A1A1AA"
+          },
+          "topBar": {
+            "logoColor": "#F72585",
+            "iconColor": "#2C2C2C"
+          }
+        },
+        "modals": {
+          "background": "#FFFFFF",
+          "borderRadius": "24px",
+          "padding": "24px",
+          "boxShadow": "0 8px 32px rgba(0, 0, 0, 0.1)"
+        },
+        "inputFields": {
+          "background": "#F9FAFB",
+          "borderRadius": "12px",
+          "padding": "12px 16px",
+          "placeholderColor": "#A9A9A9",
+          "borderColor": "#E2E8F0"
+        }
+      },
+      "layout": {
+        "spacing": {
+          "xs": "8px",
+          "sm": "12px",
+          "md": "16px",
+          "lg": "24px",
+          "xl": "32px"
+        },
+        "grid": {
+          "cardWidth": "calc(50% - 16px)",
+          "gutter": "16px"
+        },
+        "container": {
+          "paddingHorizontal": "16px",
+          "maxWidth": "600px"
+        }
+      },
+      "visualStyle": {
+        "tone": "Youthful, fun, modern, friendly",
+        "shapes": "Rounded corners (24px+), circles for avatars & icons",
+        "effects": {
+          "elevation": "soft shadows",
+          "interactions": "hover scale, smooth transitions"
+        },
+        "icons": {
+          "style": "Bold, flat or soft 3D",
+          "notificationDot": {
+            "size": "8px",
+            "color": "#F72585"
+          }
+        }
+      },
+      "usability": {
+        "mobileFirst": true,
+        "hierarchy": "Clear with bold headings, spacing, and iconography",
+        "accessibility": {
+          "contrast": "Meets WCAG AA",
+          "tapTargets": "Minimum 44px"
+        }
+      }
+    }
+  }
+  
