@@ -10,7 +10,9 @@ export default function Index() {
 				justifyContent: "center",
 				alignItems: "center",
 			}}>
-			<Redirect href={"/screens/ProfileScreen"} />
+			//<Redirect href={"/screens/ProfileScreen"} />
+      <Redirect href="/(tabs)/home" />
 		</View>
 	);
 }
+
