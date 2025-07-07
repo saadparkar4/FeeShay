@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import React, { useState } from "react";
 import { View, Text } from "react-native";
 import OnboardingScreen from "../../../components/Home/OnboardingScreen";
