@@ -47,7 +47,7 @@ A comprehensive Node.js/Express backend API for the FeeShay freelancing platform
     JWT_EXPIRES_IN=7d
 
     # Server Configuration
-    PORT=5000
+    PORT=3000
     NODE_ENV=development
 
     # File Upload Configuration

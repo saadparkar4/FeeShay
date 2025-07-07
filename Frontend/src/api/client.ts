@@ -1,151 +1,348 @@
-import axios from "axios";
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
 
 // API Configuration
-const API_BASE_URL = "http://localhost:5000/api/v1";
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+const API_VERSION = "/api/v1";
 
-// Create axios instance
-const apiClient = axios.create({
-    baseURL: API_BASE_URL,
-    timeout: 10000,
-    headers: {
-        "Content-Type": "application/json",
-    },
-});
+// Response interface
+export interface ApiResponse<T = any> {
+    success: boolean;
+    data?: T;
+    message?: string;
+    error?: string;
+}
 
-// Request interceptor to add auth token
-apiClient.interceptors.request.use(
-    async (config) => {
-        try {
-            const token = await AsyncStorage.getItem("authToken");
-            if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
+// API Client Class
+class ApiClient {
+    private client: AxiosInstance;
+
+    constructor() {
+        this.client = axios.create({
+            baseURL: `${Constants.expoConfig?.extra?.API_URL || "http://localhost:3000"}/api/v1`,
+            timeout: 10000,
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        // Request interceptor to add auth token
+        this.client.interceptors.request.use(
+            async (config) => {
+                const token = await AsyncStorage.getItem("authToken");
+                if (token) {
+                    config.headers.Authorization = `Bearer ${token}`;
+                }
+                return config;
+            },
+            (error) => {
+                return Promise.reject(error);
             }
-        } catch (error) {
-            console.error("Error getting auth token:", error);
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
+        );
+
+        // Response interceptor for error handling
+        this.client.interceptors.response.use(
+            (response: AxiosResponse) => {
+                return response;
+            },
+            (error) => {
+                if (error.response?.status === 401) {
+                    // Handle unauthorized access
+                    AsyncStorage.removeItem("authToken");
+                    // You can dispatch a logout action here
+                }
+                return Promise.reject(error);
+            }
+        );
     }
-);
 
-// Response interceptor to handle errors
-apiClient.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-        if (error.response?.status === 401) {
-            // Token expired or invalid, clear storage
-            await AsyncStorage.removeItem("authToken");
-            await AsyncStorage.removeItem("user");
+    // Generic request method
+    private async request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
+        try {
+            const response = await this.client.request(config);
+            return {
+                success: true,
+                data: response.data,
+            };
+        } catch (error: any) {
+            return {
+                success: false,
+                error: error.response?.data?.message || error.message || "An error occurred",
+            };
         }
-        return Promise.reject(error);
     }
-);
 
-// Auth API
-export const authAPI = {
-    register: (data: { email: string; password: string; role: "freelancer" | "client"; name: string }) => apiClient.post("/auth/register", data),
+    // GET request
+    async get<T>(url: string, params?: any): Promise<ApiResponse<T>> {
+        return this.request<T>({
+            method: "GET",
+            url,
+            params,
+        });
+    }
 
-    login: (data: { email: string; password: string }) => apiClient.post("/auth/login", data),
+    // POST request
+    async post<T>(url: string, data?: any): Promise<ApiResponse<T>> {
+        return this.request<T>({
+            method: "POST",
+            url,
+            data,
+        });
+    }
 
-    getProfile: () => apiClient.get("/auth/profile"),
+    // PUT request
+    async put<T>(url: string, data?: any): Promise<ApiResponse<T>> {
+        return this.request<T>({
+            method: "PUT",
+            url,
+            data,
+        });
+    }
 
-    updateProfile: (data: any) => apiClient.put("/auth/profile", data),
+    // DELETE request
+    async delete<T>(url: string): Promise<ApiResponse<T>> {
+        return this.request<T>({
+            method: "DELETE",
+            url,
+        });
+    }
 
-    changePassword: (data: { currentPassword: string; newPassword: string }) => apiClient.put("/auth/change-password", data),
-};
+    // File upload
+    async upload<T>(url: string, formData: FormData): Promise<ApiResponse<T>> {
+        return this.request<T>({
+            method: "POST",
+            url,
+            data: formData,
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+    }
+}
 
-// Jobs API
-export const jobsAPI = {
-    getAll: (params?: { page?: number; limit?: number; status?: string; category?: string; budget_min?: number; budget_max?: number; search?: string; is_internship?: boolean }) =>
-        apiClient.get("/jobs", { params }),
+// Export singleton instance
+export const apiClient = new ApiClient();
 
-    getById: (id: string) => apiClient.get(`/jobs/${id}`),
+// API Service Classes
+export class AuthService {
+    static async login(email: string, password: string) {
+        return apiClient.post("/auth/login", { email, password });
+    }
 
-    create: (data: { title: string; description: string; category?: string; budget_min?: number; budget_max?: number; is_internship?: boolean }) => apiClient.post("/jobs", data),
+    static async register(userData: { email: string; password: string; role: "freelancer" | "client" }) {
+        return apiClient.post("/auth/register", userData);
+    }
 
-    update: (id: string, data: any) => apiClient.put(`/jobs/${id}`, data),
+    static async logout() {
+        return apiClient.post("/auth/logout");
+    }
 
-    delete: (id: string) => apiClient.delete(`/jobs/${id}`),
+    static async getProfile() {
+        return apiClient.get("/auth/profile");
+    }
 
-    getMyJobs: (params?: { page?: number; limit?: number; status?: string }) => apiClient.get("/jobs/my/jobs", { params }),
+    static async updateProfile(profileData: any) {
+        return apiClient.put("/auth/profile", profileData);
+    }
+}
 
-    getCategories: () => apiClient.get("/jobs/categories"),
-};
+export class JobService {
+    static async getJobs(params?: any) {
+        return apiClient.get("/jobs", params);
+    }
 
-// Services API
-export const servicesAPI = {
-    getAll: (params?: { page?: number; limit?: number; status?: string; category?: string; price_min?: number; price_max?: number; search?: string; freelancer?: string }) =>
-        apiClient.get("/services", { params }),
+    static async getJob(id: string) {
+        return apiClient.get(`/jobs/${id}`);
+    }
 
-    getById: (id: string) => apiClient.get(`/services/${id}`),
+    static async createJob(jobData: any) {
+        return apiClient.post("/jobs", jobData);
+    }
 
-    create: (data: { title: string; description: string; category?: string; price?: number; delivery_time_days?: number }) => apiClient.post("/services", data),
+    static async updateJob(id: string, jobData: any) {
+        return apiClient.put(`/jobs/${id}`, jobData);
+    }
 
-    update: (id: string, data: any) => apiClient.put(`/services/${id}`, data),
+    static async deleteJob(id: string) {
+        return apiClient.delete(`/jobs/${id}`);
+    }
 
-    delete: (id: string) => apiClient.delete(`/services/${id}`),
+    static async getMyJobs(params?: any) {
+        return apiClient.get("/jobs/my/jobs", params);
+    }
 
-    getMyServices: (params?: { page?: number; limit?: number; status?: string }) => apiClient.get("/services/my/services", { params }),
-};
+    static async getCategories() {
+        return apiClient.get("/jobs/categories");
+    }
+}
 
-// Proposals API
-export const proposalsAPI = {
-    getAll: (params?: { page?: number; limit?: number; status?: string; job?: string; freelancer?: string }) => apiClient.get("/proposals", { params }),
+export class ServiceService {
+    static async getServices(params?: any) {
+        return apiClient.get("/services", params);
+    }
 
-    getById: (id: string) => apiClient.get(`/proposals/${id}`),
+    static async getService(id: string) {
+        return apiClient.get(`/services/${id}`);
+    }
 
-    create: (data: { job: string; cover_letter: string; proposed_price: number }) => apiClient.post("/proposals", data),
+    static async createService(serviceData: any) {
+        return apiClient.post("/services", serviceData);
+    }
 
-    update: (id: string, data: any) => apiClient.put(`/proposals/${id}`, data),
+    static async updateService(id: string, serviceData: any) {
+        return apiClient.put(`/services/${id}`, serviceData);
+    }
 
-    delete: (id: string) => apiClient.delete(`/proposals/${id}`),
+    static async deleteService(id: string) {
+        return apiClient.delete(`/services/${id}`);
+    }
 
-    getMyProposals: (params?: { page?: number; limit?: number; status?: string }) => apiClient.get("/proposals/my/proposals", { params }),
+    static async getMyServices(params?: any) {
+        return apiClient.get("/services/my/services", params);
+    }
+}
 
-    getJobProposals: (jobId: string, params?: { page?: number; limit?: number; status?: string }) => apiClient.get(`/proposals/job/${jobId}`, { params }),
+export class ProposalService {
+    static async getProposals(params?: any) {
+        return apiClient.get("/proposals", params);
+    }
 
-    updateStatus: (id: string, data: { status: string }) => apiClient.put(`/proposals/${id}/status`, data),
-};
+    static async getProposal(id: string) {
+        return apiClient.get(`/proposals/${id}`);
+    }
 
-// Messages API
-export const messagesAPI = {
-    createChat: (data: { otherUserId: string }) => apiClient.post("/messages/chats", data),
+    static async createProposal(proposalData: any) {
+        return apiClient.post("/proposals", proposalData);
+    }
 
-    getMyChats: (params?: { page?: number; limit?: number }) => apiClient.get("/messages/chats", { params }),
+    static async updateProposal(id: string, proposalData: any) {
+        return apiClient.put(`/proposals/${id}`, proposalData);
+    }
 
-    getChatMessages: (chatId: string, params?: { page?: number; limit?: number }) => apiClient.get(`/messages/chats/${chatId}/messages`, { params }),
+    static async deleteProposal(id: string) {
+        return apiClient.delete(`/proposals/${id}`);
+    }
 
-    sendMessage: (chatId: string, data: { content: string; language?: string }) => apiClient.post(`/messages/chats/${chatId}/messages`, data),
+    static async getMyProposals(params?: any) {
+        return apiClient.get("/proposals/my/proposals", params);
+    }
 
-    markAsRead: (chatId: string) => apiClient.put(`/messages/chats/${chatId}/read`),
+    static async getJobProposals(jobId: string, params?: any) {
+        return apiClient.get(`/proposals/job/${jobId}`, params);
+    }
+}
 
-    getUnreadCount: () => apiClient.get("/messages/unread-count"),
+export class MessageService {
+    static async getMyChats(params?: { page?: number; limit?: number }) {
+        return apiClient.get("/messages/chats", params);
+    }
 
-    deleteMessage: (messageId: string) => apiClient.delete(`/messages/messages/${messageId}`),
-};
+    static async getChatMessages(chatId: string, params?: { page?: number; limit?: number }) {
+        return apiClient.get(`/messages/chats/${chatId}`, params);
+    }
 
-// Reviews API
-export const reviewsAPI = {
-    getAll: (params?: { page?: number; limit?: number; reviewee?: string; reviewer?: string; job?: string; rating?: number; sentiment?: string }) =>
-        apiClient.get("/reviews", { params }),
+    static async sendMessage(chatId: string, messageData: { content: string }) {
+        return apiClient.post(`/messages/chats/${chatId}`, messageData);
+    }
 
-    getById: (id: string) => apiClient.get(`/reviews/${id}`),
+    static async createChat(userId: string) {
+        return apiClient.post("/messages/chats", { userId });
+    }
 
-    create: (data: { reviewee: string; job?: string; rating: number; comment?: string }) => apiClient.post("/reviews", data),
+    static async markMessagesAsRead(chatId: string) {
+        return apiClient.put(`/messages/chats/${chatId}/read`);
+    }
 
-    update: (id: string, data: { rating?: number; comment?: string }) => apiClient.put(`/reviews/${id}`, data),
+    static async getUnreadCount() {
+        return apiClient.get("/messages/unread-count");
+    }
+}
 
-    delete: (id: string) => apiClient.delete(`/reviews/${id}`),
+export class ReviewService {
+    static async getReviews(params?: { page?: number; limit?: number; userId?: string }) {
+        return apiClient.get("/reviews", params);
+    }
 
-    getUserReviews: (userId: string, params?: { page?: number; limit?: number; type?: "received" | "given" }) => apiClient.get(`/reviews/user/${userId}`, { params }),
-};
+    static async getReviewById(id: string) {
+        return apiClient.get(`/reviews/${id}`);
+    }
 
-// Health check
-export const healthAPI = {
-    check: () => apiClient.get("/health"),
-};
+    static async createReview(reviewData: any) {
+        return apiClient.post("/reviews", reviewData);
+    }
+
+    static async updateReview(id: string, reviewData: any) {
+        return apiClient.put(`/reviews/${id}`, reviewData);
+    }
+
+    static async deleteReview(id: string) {
+        return apiClient.delete(`/reviews/${id}`);
+    }
+
+    static async getUserReviews(userId: string, params?: { page?: number; limit?: number }) {
+        return apiClient.get(`/reviews/user/${userId}`, params);
+    }
+}
+
+export class ProfileService {
+    static async uploadProfileImage(imageUri: string) {
+        const formData = new FormData();
+        formData.append("image", {
+            uri: imageUri,
+            type: "image/jpeg",
+            name: "profile.jpg",
+        } as any);
+
+        return apiClient.upload("/profile/upload-image", formData);
+    }
+}
+
+// AI Integration Services (Placeholders for future implementation)
+export class AIService {
+    // TODO: Implement OpenAI ChatGPT integration for chat assistance
+    static async getChatSuggestion(message: string) {
+        // Placeholder for OpenAI integration
+        return apiClient.post("/ai/chat-suggestion", { message });
+    }
+
+    // TODO: Implement Affinda Resume Parser integration
+    static async parseResume(resumeFile: any) {
+        // Placeholder for Affinda integration
+        const formData = new FormData();
+        formData.append("resume", resumeFile);
+        return apiClient.upload("/ai/parse-resume", formData);
+    }
+
+    // TODO: Implement Microsoft Azure Computer Vision for image moderation
+    static async moderateImage(imageUri: string) {
+        // Placeholder for Azure Computer Vision integration
+        const formData = new FormData();
+        formData.append("image", {
+            uri: imageUri,
+            type: "image/jpeg",
+            name: "image.jpg",
+        } as any);
+        return apiClient.upload("/ai/moderate-image", formData);
+    }
+
+    // TODO: Implement LibreTranslate for language translation
+    static async translateText(text: string, targetLanguage: string) {
+        // Placeholder for LibreTranslate integration
+        return apiClient.post("/ai/translate", { text, targetLanguage });
+    }
+
+    // TODO: Implement sentiment analysis for reviews
+    static async analyzeSentiment(text: string) {
+        // Placeholder for sentiment analysis
+        return apiClient.post("/ai/sentiment-analysis", { text });
+    }
+}
+
+export class CategoryService {
+    static async getCategories() {
+        return apiClient.get("/jobs/categories");
+    }
+}
 
 export default apiClient;

@@ -1,91 +1,103 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { authAPI } from "../api/client";
+import { useLogin, useRegister, useLogout } from "../hooks/useQueries";
 
-interface User {
-    id: string;
+// User interface
+export interface User {
+    _id: string;
     email: string;
     role: "freelancer" | "client";
+    name?: string;
     created_at: string;
     last_login?: string;
+    dark_mode: boolean;
+    is_active: boolean;
 }
 
+// Auth context interface
 interface AuthContextType {
     user: User | null;
-    token: string | null;
     isLoading: boolean;
     login: (email: string, password: string) => Promise<void>;
-    register: (email: string, password: string, role: "freelancer" | "client", name: string) => Promise<void>;
+    register: (email: string, password: string, role: "freelancer" | "client") => Promise<void>;
     logout: () => Promise<void>;
-    updateProfile: (data: any) => Promise<void>;
+    isAuthenticated: boolean;
 }
 
+// Create context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error("useAuth must be used within an AuthProvider");
-    }
-    return context;
-};
-
+// Auth provider props
 interface AuthProviderProps {
-    children: ReactNode;
+    children: React.ReactNode;
 }
 
+// Auth provider component
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
-    const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
+    const loginMutation = useLogin();
+    const registerMutation = useRegister();
+    const logoutMutation = useLogout();
+
+    // Check for stored token on app start
     useEffect(() => {
-        // Check for existing token on app start
+        const checkAuthStatus = async () => {
+            try {
+                const token = await AsyncStorage.getItem("authToken");
+                const userData = await AsyncStorage.getItem("userData");
+
+                if (token && userData) {
+                    const parsedUser = JSON.parse(userData);
+                    setUser(parsedUser);
+                }
+            } catch (error) {
+                console.error("Error checking auth status:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
         checkAuthStatus();
     }, []);
 
-    const checkAuthStatus = async () => {
-        try {
-            const storedToken = await AsyncStorage.getItem("authToken");
-            const storedUser = await AsyncStorage.getItem("user");
-
-            if (storedToken && storedUser) {
-                setToken(storedToken);
-                setUser(JSON.parse(storedUser));
-            }
-        } catch (error) {
-            console.error("Error checking auth status:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     const login = async (email: string, password: string) => {
         try {
-            const response = await authAPI.login({ email, password });
-            const { token: newToken, user: userData } = response.data.data;
+            const response = await loginMutation.mutateAsync({ email, password });
 
-            await AsyncStorage.setItem("authToken", newToken);
-            await AsyncStorage.setItem("user", JSON.stringify(userData));
+            if (response.success && response.data) {
+                const { token, user: userData } = response.data as { token: string; user: User };
 
-            setToken(newToken);
-            setUser(userData);
+                // Store token and user data
+                await AsyncStorage.setItem("authToken", token);
+                await AsyncStorage.setItem("userData", JSON.stringify(userData));
+
+                setUser(userData);
+            } else {
+                throw new Error(response.message || "Login failed");
+            }
         } catch (error) {
             console.error("Login error:", error);
             throw error;
         }
     };
 
-    const register = async (email: string, password: string, role: "freelancer" | "client", name: string) => {
+    const register = async (email: string, password: string, role: "freelancer" | "client") => {
         try {
-            const response = await authAPI.register({ email, password, role, name });
-            const { token: newToken, user: userData } = response.data.data;
+            const response = await registerMutation.mutateAsync({ email, password, role });
 
-            await AsyncStorage.setItem("authToken", newToken);
-            await AsyncStorage.setItem("user", JSON.stringify(userData));
+            if (response.success && response.data) {
+                const { token, user: userData } = response.data as { token: string; user: User };
 
-            setToken(newToken);
-            setUser(userData);
+                // Store token and user data
+                await AsyncStorage.setItem("authToken", token);
+                await AsyncStorage.setItem("userData", JSON.stringify(userData));
+
+                setUser(userData);
+            } else {
+                throw new Error(response.message || "Registration failed");
+            }
         } catch (error) {
             console.error("Registration error:", error);
             throw error;
@@ -94,37 +106,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const logout = async () => {
         try {
+            await logoutMutation.mutateAsync();
+
+            // Clear stored data
             await AsyncStorage.removeItem("authToken");
-            await AsyncStorage.removeItem("user");
-            setToken(null);
+            await AsyncStorage.removeItem("userData");
+
             setUser(null);
         } catch (error) {
             console.error("Logout error:", error);
-        }
-    };
-
-    const updateProfile = async (data: any) => {
-        try {
-            const response = await authAPI.updateProfile(data);
-            const updatedUser = response.data.data.user;
-
-            await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
-            setUser(updatedUser);
-        } catch (error) {
-            console.error("Profile update error:", error);
-            throw error;
+            // Even if the API call fails, clear local data
+            await AsyncStorage.removeItem("authToken");
+            await AsyncStorage.removeItem("userData");
+            setUser(null);
         }
     };
 
     const value: AuthContextType = {
         user,
-        token,
         isLoading,
         login,
         register,
         logout,
-        updateProfile,
+        isAuthenticated: !!user,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+// Custom hook to use auth context
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error("useAuth must be used within an AuthProvider");
+    }
+    return context;
+};
+
+export default AuthContext;

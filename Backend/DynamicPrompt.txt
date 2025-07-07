@@ -1,0 +1,202 @@
+here is a brief about the project FeeShay
+To develop a cross-platform mobile application that serves as a secure, user-friendly marketplace for freelancers and clients (individuals or businesses) to connect, collaborate, and transact for digital services such as graphic design, writing, programming, marketing, and more.
+
+
+
+
+analyse the entire codebase and adpat the static data points to take input dynamically from the frontend and sync the info with the backend and push to mongodb.
+
+Ensure the code also reflect changes to frontend making it more intuitive and implementing the relevant inout fields and selectors, also formulate the frontend Journey based on the flow given below
+
+Here is a separated concept document for Freelancer and Client flows in the FeeShay app, along with free AI tools and APIs you can integrate with your React app to enhance functionality.
+
+🔶 FREELANCER FLOW – Concept Document
+1. Home Screen
+Fields:
+searchQuery (input)
+categories[] (scrollable list)
+Features:
+Search/filter jobs
+Horizontal scroll categories
+Toggle between freelancer ↔ client view
+API Endpoints:
+GET /jobs?search=
+GET /categories
+Success Criteria:
+Jobs list is accurate and updates instantly
+Category scroll and toggling work smoothly
+
+2. Proposals
+Tabs:
+Active, Completed, Cancelled
+Features:
+View proposals by status
+Filter and paginate
+Endpoints:
+GET /freelancer/proposals?status=
+Success Criteria:
+Proposals match tab criteria
+Responsive interaction
+
+
+3. Messages
+Fields:
+chatList[], messages[], messageInput
+Features:
+Real-time chat
+Read receipts
+Endpoints:
+GET /chat
+POST /chat/:userId/message
+Success Criteria:
+Live messaging, history loading
+
+4. Profile
+Sections:
+profileImage, name, bio, skills[], location, languages[], memberSince
+Settings:
+Notifications, Language, Logout
+Portfolio:
+Images, descriptions
+Rating & Reviews:
+From past clients
+Endpoints:
+GET /freelancer/profile
+PUT /freelancer/profile
+POST /freelancer/portfolio
+Success Criteria:
+Editable, error-free fields
+Real-time updates and image previews
+
+5. My Services
+Fields:
+serviceTitle, description, price, deliveryTime
+Features:
+Manage gig-style services
+Endpoints:
+GET /freelancer/services
+POST /freelancer/services
+Success Criteria:
+CRUD operations work reliably
+
+🔷 CLIENT FLOW – Concept Document
+1. Home Screen
+Fields:
+searchQuery (input)
+categories[] (scrollable list)
+Features:
+Search/filter freelancers
+Toggle view: Talents vs Jobs
+API Endpoints:
+GET /freelancers?search=
+GET /categories
+Success Criteria:
+Dynamic listing of freelancers
+
+2. Proposals
+Tabs:
+Active, Completed, Cancelled
+Endpoints:
+GET /client/proposals?status=
+Success Criteria:
+View proposals sent to jobs posted
+
+3. Messages
+Same as freelancer
+
+4. Profile
+Sections:
+profileImage, name, bio, location, languages[], clientSince
+Settings:
+Notifications, Language, Logout
+My Job Post:
+Job listings made by the client
+Rating & Reviews:
+From freelancers
+Endpoints:
+GET /client/profile
+PUT /client/profile
+GET /client/jobs
+Success Criteria:
+Editable fields, listing own jobs, clear layout
+
+🧠 FREE AI TOOLS & INTEGRATION IDEAS
+You can enhance FeeShay with the following AI APIs that have free tiers and are easy to integrate with React:
+
+✅ 1. Chat (AI Assistant / Support Bot)
+Tool: OpenAI ChatGPT API
+Alt: Hugging Face Inference API
+React Integration:
+Use axios or fetch to call chat completions
+Handle suggestions, chatbot support, onboarding
+
+✅ 2. Resume/CV Parsing
+Tool: Affinda Resume Parser
+Alt: Mindee
+Use Case: Analyze freelancer profile uploads
+React Integration:
+File upload → API → autofill form fields
+✅ 1. Create an Affinda Account
+Go to https://www.affinda.com
+Sign up for a free account (they offer a generous free tier)
+✅ 2. Get Your API Key
+Once logged in:
+Go to Dashboard
+Navigate to API Keys
+Generate or copy your API Key
+✅ 3. Install Affinda SDK (Optional)
+Affinda provides an SDK, or you can use plain fetch or axios.
+
+
+📦 Node.js SDK
+bash
+Copy
+Edit
+npm install affinda
+✅ 4. Make API Calls
+Use axios, fetch, or the SDK to call the API.
+
+
+https://chatgpt.com/share/686bee93-a588-800d-ae41-53afb55066df
+
+✅ 3. Profile Image Analysis / Moderation
+Tool: Microsoft Azure Computer Vision
+Alt: Sightengine
+Use Case: Flag NSFW or inappropriate uploads
+
+✅ 4. Language Detection + Translation
+Tool: LibreTranslate
+Alt: Google Translate API
+Use Case: Translate bios or messages
+React Integration:
+Call onChange for multilingual support
+Step	Task
+1️⃣	Install Axios
+2️⃣	Create backend route to proxy LibreTranslate
+3️⃣	Call backend from React Native
+4️⃣	Translate job posts, chats, etc.
+5️⃣	Optionally detect languages
+6️⃣	Optionally self-host the API for scalability/security
+	https://chatgpt.com/share/686bee93-a588-800d-ae41-53afb55066df
+
+✅ 5. Rating Analysis
+Tool: TextBlob / VADER
+Use Case: Analyze review tone (positive/negative)
+Integration: Server-side Python or cloud function
+
+✅ 6. Real-Time Notifications
+Tool: Pusher
+Alt: Socket.IO
+Use Case: Chat, proposal status updates
+
+✅ 7. Code-Free Backend Options (Optional)
+Tool: Firebase
+Use Cases: Auth, Storage, Realtime DB
+
+
+also use the tools mentioned to create comment placeholders for the integration but dont implement them yet.
+
+IMPORTANT: dont change the frontend design, only add new components and elements to complete the flow and journey
+
+
+Also suggest me a flow where the user can be both client and freelancer.
