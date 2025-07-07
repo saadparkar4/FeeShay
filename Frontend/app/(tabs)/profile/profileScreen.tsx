@@ -12,11 +12,10 @@ const ProfileScreen = () => {
 	return (
 		<SafeAreaView style={{ flex: 1 }}>
 			<ScrollView contentContainerStyle={{ padding: 16 }}>
-				{" "}
-				<ProfileHeader /> <PersonalDetails /> <JobPostCard /> <RatingsAndReviews /> <SettingsPanel />{" "}
+				<ProfileHeader /> <PersonalDetails /> <JobPostCard /> <RatingsAndReviews /> <SettingsPanel />
 				<Button title="Job Post" onPress={() => router.push("./details/JobPost ")} />
 				<Button title="Services" onPress={() => router.push("./details/Services")} />
-			</ScrollView>{" "}
+			</ScrollView>
 		</SafeAreaView>
 	);
 };

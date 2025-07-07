@@ -14,7 +14,7 @@ interface UserProfile {
 const dummyProfile: UserProfile = {
 	name: "Alex Morgan",
 	title: "Digital Marketing Specialist",
-	avatarUrl: "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png",
+	avatarUrl: "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg",
 	bio: "Experienced marketing professional with expertise in digital campaigns, SEO, and content strategy. Looking for talented freelancers to help grow my business.",
 };
 
