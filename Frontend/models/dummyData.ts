@@ -129,8 +129,8 @@ export const services: Service[] = [
 		id: "1",
 		title: "Logo Design",
 		description: "Professional logo design for your business or brand.",
-		dateLabel: "Added",
-		dateValue: "2 days ago",
+		dateLabel: "Level",
+		dateValue: "Expert",
 		actions: [
 			{ label: "Edit", icon: "edit-2" },
 			{ label: "Delete", icon: "trash-2" },
@@ -140,8 +140,8 @@ export const services: Service[] = [
 		id: "2",
 		title: "SEO Optimization",
 		description: "Improve your website ranking with expert SEO services.",
-		dateLabel: "Added",
-		dateValue: "1 week ago",
+		dateLabel: "Level",
+		dateValue: "Intermediate",
 		actions: [
 			{ label: "Edit", icon: "edit-2" },
 			{ label: "Delete", icon: "trash-2" },
@@ -151,8 +151,8 @@ export const services: Service[] = [
 		id: "3",
 		title: "Content Writing",
 		description: "High-quality content writing for blogs, websites, and more.",
-		dateLabel: "Added",
-		dateValue: "3 weeks ago",
+		dateLabel: "Level",
+		dateValue: "Professional",
 		actions: [
 			{ label: "Edit", icon: "edit-2" },
 			{ label: "Delete", icon: "trash-2" },

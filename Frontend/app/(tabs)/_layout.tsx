@@ -16,6 +16,7 @@ export default function TabLayout() {
 				name="home"
 				options={{
 					title: "Home",
+					href: "/home/Home",
 					tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? "home" : "home-outline"} color={color} size={24} />,
 				}}
 			/>
