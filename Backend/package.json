@@ -17,22 +17,34 @@
         "mongoose": "^8.16.1",
         "morgan": "^1.10.0",
         "multer": "^2.0.1",
+        "react": "^19.0.0",
         "shortid": "^2.2.17",
         "ts-node": "^10.9.2",
         "typescript": "^5.8.3"
     },
-    "name": "backend",
+    "name": "feeshay-backend",
     "version": "1.0.0",
-    "description": "\"# FeeShay\"",
-    "main": "index.js",
+    "description": "FeeShay Backend API with TypeScript, Express, and MongoDB",
+    "main": "dist/server.js",
     "scripts": {
         "start": "nodemon src/server.ts",
         "build": "tsc",
-        "setup": "node scripts/setup-simple.js",
-        "seed": "ts-node scripts/seedData.ts",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "setup": "node scripts/setup.js",
+        "seed": "ts-node scripts/seed.ts",
+        "test": "jest --detectOpenHandles",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage",
+        "test:api": "jest tests/api-endpoints.test.js --detectOpenHandles"
     },
-    "keywords": [],
-    "author": "",
-    "license": "ISC"
+    "keywords": [
+        "express",
+        "typescript",
+        "mongodb",
+        "mongoose",
+        "api",
+        "freelance",
+        "marketplace"
+    ],
+    "author": "FeeShay Team",
+    "license": "MIT"
 }

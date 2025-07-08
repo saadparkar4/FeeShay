@@ -69,14 +69,14 @@ A comprehensive Node.js/Express backend API for the FeeShay freelancing platform
     npm start
     ```
 
-The server will start on `http://localhost:5000`
+The server will start on `http://localhost:3000`
 
 ## 📚 API Documentation
 
 ### Base URL
 
 ```
-http://localhost:5000/api/v1
+http://localhost:3000/api/v1
 ```
 
 ### Authentication Endpoints
