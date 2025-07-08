@@ -44,6 +44,9 @@ export default function RatingsAndReviews({ onReviewPress }: RatingsAndReviewsPr
 
     const reviews = (reviewsData as any)?.data?.data || [];
 
+    // Safety check to ensure reviews is always an array
+    const safeReviews = Array.isArray(reviews) ? reviews : [];
+
     if (reviews.length === 0) {
         return (
             <View style={styles.container}>
@@ -56,7 +59,7 @@ export default function RatingsAndReviews({ onReviewPress }: RatingsAndReviewsPr
     }
 
     // Calculate average rating
-    const averageRating = reviews.length > 0 ? reviews.reduce((sum: number, review: any) => sum + review.rating, 0) / reviews.length : 0;
+    const averageRating = safeReviews.length > 0 ? safeReviews.reduce((sum: number, review: any) => sum + review.rating, 0) / safeReviews.length : 0;
 
     return (
         <View style={styles.container}>
@@ -80,12 +83,12 @@ export default function RatingsAndReviews({ onReviewPress }: RatingsAndReviewsPr
                     </View>
                 </View>
                 <View style={styles.reviewCount}>
-                    <Text style={styles.reviewCountText}>{reviews.length} reviews</Text>
+                    <Text style={styles.reviewCountText}>{safeReviews.length} reviews</Text>
                 </View>
             </View>
 
             <View style={styles.reviewsList}>
-                {reviews.slice(0, 3).map((review: any) => (
+                {safeReviews.slice(0, 3).map((review: any) => (
                     <TouchableOpacity key={review._id} style={styles.reviewCard} onPress={() => onReviewPress(review._id)}>
                         <View style={styles.reviewHeader}>
                             <View style={styles.reviewerInfo}>
@@ -108,9 +111,9 @@ export default function RatingsAndReviews({ onReviewPress }: RatingsAndReviewsPr
                 ))}
             </View>
 
-            {reviews.length > 3 && (
+            {safeReviews.length > 3 && (
                 <TouchableOpacity style={styles.viewMoreButton}>
-                    <Text style={styles.viewMoreButtonText}>View {reviews.length - 3} more reviews</Text>
+                    <Text style={styles.viewMoreButtonText}>View {safeReviews.length - 3} more reviews</Text>
                 </TouchableOpacity>
             )}
         </View>

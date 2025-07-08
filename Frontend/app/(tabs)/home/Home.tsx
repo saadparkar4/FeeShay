@@ -54,6 +54,50 @@ interface Category {
 }
 
 // ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+const convertDecimalToNumber = (value: any): number => {
+    if (typeof value === "number") return value;
+    if (typeof value === "string") return parseFloat(value);
+    if (value && typeof value === "object" && value.$numberDecimal) {
+        return parseFloat(value.$numberDecimal);
+    }
+    return 0;
+};
+
+const normalizeJobData = (job: any): Job => ({
+    _id: job._id,
+    title: job.title,
+    description: job.description,
+    category: job.category?.name || job.category,
+    budget_min: convertDecimalToNumber(job.budget_min),
+    budget_max: convertDecimalToNumber(job.budget_max),
+    status: job.status,
+    created_at: job.created_at,
+    client: {
+        name: job.client?.name || "",
+        profile_image_url: job.client?.profile_image_url || "",
+    },
+});
+
+const normalizeServiceData = (service: any): Service => ({
+    _id: service._id,
+    title: service.title,
+    description: service.description,
+    category: service.category?.name || service.category,
+    price: convertDecimalToNumber(service.price),
+    delivery_time_days: service.delivery_time_days,
+    status: service.status,
+    created_at: service.created_at,
+    freelancer: {
+        name: service.freelancer?.name || "",
+        profile_image_url: service.freelancer?.profile_image_url || "",
+        rating: service.freelancer?.rating || 0,
+        location: service.freelancer?.location || "",
+    },
+});
+
+// ============================================================================
 // MAIN HOME SCREEN COMPONENT
 // ============================================================================
 export default function HomeScreen() {
@@ -83,15 +127,69 @@ export default function HomeScreen() {
     // Categories query
     const categoriesQuery = useCategories();
 
+    // Debug authentication and query status
+    console.log("Auth status:", {
+        user: !!user,
+        userRole: user?.role,
+        isAuthenticated: !!user,
+    });
+
+    console.log("Query status:", {
+        jobsQuery: {
+            isLoading: jobsQuery.isLoading,
+            isError: jobsQuery.isError,
+            error: jobsQuery.error,
+            data: !!jobsQuery.data,
+        },
+        servicesQuery: {
+            isLoading: servicesQuery.isLoading,
+            isError: servicesQuery.isError,
+            error: servicesQuery.error,
+            data: !!servicesQuery.data,
+        },
+        categoriesQuery: {
+            isLoading: categoriesQuery.isLoading,
+            isError: categoriesQuery.isError,
+            error: categoriesQuery.error,
+            data: !!categoriesQuery.data,
+        },
+    });
+
     // ============================================================================
     // DYNAMIC CATEGORY GENERATION WITH COUNTS
     // ============================================================================
     const getCategoriesWithCounts = () => {
-        const currentData = (tab === "talents" ? (servicesQuery.data as any)?.data?.data : (jobsQuery.data as any)?.data?.data) || [];
-        const categories = (categoriesQuery.data as any)?.data || [];
+        let currentData: any[] = [];
+        if (tab === "talents") {
+            const sData: any = (servicesQuery as any).data;
+            if (Array.isArray(sData?.data?.data?.services)) {
+                currentData = sData.data.data.services;
+            } else if (Array.isArray(sData?.data?.services)) {
+                currentData = sData.data.services;
+            }
+        } else {
+            const jData: any = (jobsQuery as any).data;
+            if (Array.isArray(jData?.data?.data?.jobs)) {
+                currentData = jData.data.data.jobs;
+            } else if (Array.isArray(jData?.data?.jobs)) {
+                currentData = jData.data.jobs;
+            }
+        }
+        let categories: any[] = [];
+        const cData: any = (categoriesQuery as any).data;
+        if (Array.isArray(cData?.data?.data)) {
+            categories = cData.data.data;
+        } else if (Array.isArray(cData?.data)) {
+            categories = cData.data;
+        }
 
-        console.log("Categories state:", categories);
-        console.log("Current data:", currentData);
+        console.log("Categories data:", {
+            hasData: !!cData,
+            hasDataData: !!cData?.data,
+            hasDataDataData: !!cData?.data?.data,
+            categoriesLength: categories.length,
+            categories: categories,
+        });
 
         // Start with "All Categories" option
         const categoriesWithCounts = [
@@ -102,7 +200,6 @@ export default function HomeScreen() {
         ];
 
         // Add categories from database with counts from current data
-        // Ensure categories is an array before calling forEach
         if (categories && Array.isArray(categories)) {
             categories.forEach((category: any) => {
                 const count = currentData.filter((item: any) => item.category === category.name).length;
@@ -111,11 +208,7 @@ export default function HomeScreen() {
                     count,
                 });
             });
-        } else {
-            console.log("Categories is not an array:", categories);
         }
-
-        console.log("Categories with counts:", categoriesWithCounts);
         return categoriesWithCounts;
     };
 
@@ -168,7 +261,39 @@ export default function HomeScreen() {
         const currentQuery = tab === "talents" ? servicesQuery : jobsQuery;
         const isLoading = currentQuery.isLoading;
         const error = currentQuery.error;
-        const data = (currentQuery.data as any)?.data?.data || [];
+
+        // Defensive extraction: try to get an array from the response
+        let data: any[] = [];
+        const cData: any = (currentQuery as any).data;
+        console.log(`${tab} query data structure:`, {
+            hasData: !!cData,
+            hasDataData: !!cData?.data,
+            hasDataDataJobs: !!cData?.data?.jobs,
+            hasDataDataServices: !!cData?.data?.services,
+            dataKeys: cData ? Object.keys(cData) : [],
+            dataDataKeys: cData?.data ? Object.keys(cData.data) : [],
+        });
+        console.log(`${tab} full query data:`, JSON.stringify(cData, null, 2));
+
+        if (tab === "talents") {
+            if (Array.isArray(cData?.data?.data?.services)) {
+                data = cData.data.data.services;
+                console.log("Services data extracted:", data.length, "items");
+            } else if (Array.isArray(cData?.data?.services)) {
+                data = cData.data.services;
+                console.log("Services fallback data extracted:", data.length, "items");
+            }
+        } else {
+            if (Array.isArray(cData?.data?.data?.jobs)) {
+                data = cData.data.data.jobs;
+                console.log("Jobs data extracted:", data.length, "items");
+            } else if (Array.isArray(cData?.data?.jobs)) {
+                data = cData.data.jobs;
+                console.log("Jobs fallback data extracted:", data.length, "items");
+            }
+        }
+        console.log("Final data array length:", data.length);
+        console.log("First item in data array:", data[0]);
 
         if (isLoading && data.length === 0) {
             return (
@@ -201,39 +326,43 @@ export default function HomeScreen() {
             <ScrollView style={styles.scrollView} refreshControl={<RefreshControl refreshing={currentQuery.isRefetching} onRefresh={handleRefresh} />}>
                 <View style={styles.contentContainer}>
                     {tab === "talents"
-                        ? // Render talent cards
-                          (data as Service[]).map((service) => (
-                              <TalentCard
-                                  key={service._id}
-                                  talent={{
-                                      id: service._id,
-                                      name: service.freelancer.name,
-                                      title: service.title,
-                                      location: service.freelancer.location || "Location not specified",
-                                      rating: service.freelancer.rating || 0,
-                                      price: service.price,
-                                      avatar: service.freelancer.profile_image_url || "",
-                                      category: service.category,
-                                  }}
-                              />
-                          ))
-                        : // Render job cards
-                          (data as Job[]).map((job) => (
-                              <JobCard
-                                  key={job._id}
-                                  job={{
-                                      id: job._id,
-                                      title: job.title,
-                                      image: job.client.profile_image_url || "",
-                                      sellerAvatar: job.client.profile_image_url || "",
-                                      sellerName: job.client.name,
-                                      rating: 4.5, // TODO: Add rating to job model
-                                      ratingCount: 0, // TODO: Add rating count to job model
-                                      category: job.category,
-                                      price: job.budget_max,
-                                  }}
-                              />
-                          ))}
+                        ? data.map((service: any) => {
+                              const normalizedService = normalizeServiceData(service);
+                              return (
+                                  <TalentCard
+                                      key={normalizedService._id}
+                                      talent={{
+                                          id: normalizedService._id,
+                                          name: normalizedService.freelancer.name,
+                                          title: normalizedService.title,
+                                          location: normalizedService.freelancer.location || "Location not specified",
+                                          rating: normalizedService.freelancer.rating || 0,
+                                          price: normalizedService.price,
+                                          avatar: normalizedService.freelancer.profile_image_url || "",
+                                          category: normalizedService.category,
+                                      }}
+                                  />
+                              );
+                          })
+                        : data.map((job: any) => {
+                              const normalizedJob = normalizeJobData(job);
+                              return (
+                                  <JobCard
+                                      key={normalizedJob._id}
+                                      job={{
+                                          id: normalizedJob._id,
+                                          title: normalizedJob.title,
+                                          image: normalizedJob.client.profile_image_url || "",
+                                          sellerAvatar: normalizedJob.client.profile_image_url || "",
+                                          sellerName: normalizedJob.client.name,
+                                          rating: 4.5, // TODO: Add rating to job model
+                                          ratingCount: 0, // TODO: Add rating count to job model
+                                          category: normalizedJob.category,
+                                          price: normalizedJob.budget_max,
+                                      }}
+                                  />
+                              );
+                          })}
 
                     {currentQuery.isRefetching && data.length > 0 && (
                         <View style={styles.loadingMoreContainer}>
@@ -282,14 +411,14 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.background,
     },
     scrollView: {
-        flex: 1,
+        // flex: 1,
     },
     contentContainer: {
         paddingHorizontal: 16,
         paddingBottom: 100, // Space for FAB
     },
     centerContainer: {
-        flex: 1,
+        // flex: 1,
         justifyContent: "center",
         alignItems: "center",
         paddingHorizontal: 20,
