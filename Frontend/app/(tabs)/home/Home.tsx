@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, ScrollView, SafeAreaView, Platform, RefreshControl, Alert } from "react-native";
-import Constants from "expo-constants";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, RefreshControl, Alert } from "react-native";
+// import Constants from "expo-constants";
 import TopBar from "../../../components/Home/TopBar";
 import SearchBar from "../../../components/Home/SearchBar";
 import CategoryScroll from "../../../components/Home/CategoryScroll";

@@ -5,7 +5,7 @@ import { FilterBar, ProposalFilter } from "../../../components/Proposals/FilterB
 import { FloatingButton } from "../../../components/Proposals/FloatingButton";
 import { BookmarkModal } from "../../../components/Proposals/BookmarkModal";
 //
-const mockProposals: Array<Freelancer & { status: ProposalFilter }> = [
+const mockProposals: (Freelancer & { status: ProposalFilter })[] = [
     { id: "1", name: "Sarah Johnson", skill: "UI/UX Designer", rating: 4.9, status: "Active" },
     { id: "2", name: "Michael Chen", skill: "Full Stack Developer", rating: 4.7, status: "Completed" },
     { id: "3", name: "Emma Rodriguez", skill: "Content Writer", rating: 4.8, status: "Cancelled" },

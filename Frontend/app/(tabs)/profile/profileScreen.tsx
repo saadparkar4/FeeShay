@@ -78,9 +78,9 @@ const ProfileScreen = () => {
     const handleSettingPress = (setting: string) => {};
 
     // Dummy data fallback
-    const profileData = isAuthenticated && user ? user : DUMMY_USER;
+    const profileData = isAuthenticated && user ? DUMMY_USER : DUMMY_USER;
     const jobs = isAuthenticated ? undefined : DUMMY_JOBS;
-    const reviews = isAuthenticated ? undefined : DUMMY_REVIEWS;
+    // const reviews = isAuthenticated ? undefined : DUMMY_REVIEWS;
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
@@ -111,7 +111,7 @@ const ProfileScreen = () => {
                             >
                                 <View style={{ alignItems: "center" }}>
                                     <View style={{ position: "relative", marginBottom: 12 }}>
-                                        <Image source={{ uri: DUMMY_USER.avatar }} style={{ width: 80, height: 80, borderRadius: 40, borderWidth: 3, borderColor: "#F72585" }} />
+                                        <Image source={{ uri: profileData.avatar }} style={{ width: 80, height: 80, borderRadius: 40, borderWidth: 3, borderColor: "#F72585" }} />
                                         <TouchableOpacity
                                             style={{
                                                 position: "absolute",
@@ -126,9 +126,9 @@ const ProfileScreen = () => {
                                             <Text style={{ color: "#fff", fontSize: 10, fontWeight: "600" }}>Edit</Text>
                                         </TouchableOpacity>
                                     </View>
-                                    <Text style={{ fontSize: 24, fontWeight: "bold", color: "#2C2C2C", marginBottom: 4 }}>{DUMMY_USER.name}</Text>
-                                    <Text style={{ fontSize: 16, color: "#F72585", fontWeight: "600", marginBottom: 4 }}>{DUMMY_USER.title}</Text>
-                                    <Text style={{ fontSize: 14, color: "#6D6D6D", marginBottom: 4 }}>{DUMMY_USER.bio}</Text>
+                                    <Text style={{ fontSize: 24, fontWeight: "bold", color: "#2C2C2C", marginBottom: 4 }}>{profileData.name}</Text>
+                                    <Text style={{ fontSize: 16, color: "#F72585", fontWeight: "600", marginBottom: 4 }}>{profileData.title}</Text>
+                                    <Text style={{ fontSize: 14, color: "#6D6D6D", marginBottom: 4 }}>{profileData.bio}</Text>
                                 </View>
                             </View>
                             {/* Dummy Personal Details */}
@@ -149,11 +149,11 @@ const ProfileScreen = () => {
                                 <Text style={{ fontWeight: "bold", fontSize: 16, marginBottom: 12 }}>Personal Details</Text>
                                 <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
                                     <Text style={{ fontSize: 16, marginRight: 8 }}>📍</Text>
-                                    <Text style={{ fontSize: 14, color: "#2C2C2C" }}>{DUMMY_USER.location}</Text>
+                                    <Text style={{ fontSize: 14, color: "#2C2C2C" }}>{profileData.location}</Text>
                                 </View>
                                 <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", marginBottom: 8 }}>
                                     <Text style={{ fontSize: 16, marginRight: 8 }}>🗣️</Text>
-                                    {DUMMY_USER.languages.map((lang, idx) => (
+                                    {profileData.languages.map((lang, idx) => (
                                         <View
                                             key={lang.name}
                                             style={{ backgroundColor: "#F1F3F9", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2, marginRight: 6, marginBottom: 4 }}
