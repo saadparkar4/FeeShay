@@ -15,6 +15,7 @@ export default function RatingsAndReviews({ onReviewPress }: RatingsAndReviewsPr
             await refetch();
         } catch (error) {
             Alert.alert("Error", "Failed to refresh reviews data");
+            console.error(error);
         }
     };
 

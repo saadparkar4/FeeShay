@@ -42,6 +42,7 @@ export default function PersonalDetails({ onClose }: PersonalDetailsProps) {
             onClose();
         } catch (error) {
             Alert.alert("Error", "Failed to update profile");
+            console.error(error);
         }
     };
 
@@ -50,6 +51,7 @@ export default function PersonalDetails({ onClose }: PersonalDetailsProps) {
             await refetch();
         } catch (error) {
             Alert.alert("Error", "Failed to refresh profile data");
+            console.error(error);
         }
     };
 
