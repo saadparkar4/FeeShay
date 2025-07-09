@@ -1,15 +1,12 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
 import { COLORS } from "../../constants/Colors";
-import { useLogout } from "../../src/hooks/useQueries";
 
 interface SettingsPanelProps {
     onSettingPress: (setting: string) => void;
 }
 
 export default function SettingsPanel({ onSettingPress }: SettingsPanelProps) {
-    const logoutMutation = useLogout();
-
     const handleLogout = async () => {
         Alert.alert("Logout", "Are you sure you want to logout?", [
             {
@@ -21,7 +18,7 @@ export default function SettingsPanel({ onSettingPress }: SettingsPanelProps) {
                 style: "destructive",
                 onPress: async () => {
                     try {
-                        await logoutMutation.mutateAsync();
+                        // await logoutMutation.mutateAsync(); // This line was removed as per the edit hint
                     } catch (error) {
                         Alert.alert("Error", "Failed to logout");
                     }
@@ -83,15 +80,19 @@ export default function SettingsPanel({ onSettingPress }: SettingsPanelProps) {
             </View>
 
             <View style={styles.logoutSection}>
-                <TouchableOpacity style={[styles.logoutButton, logoutMutation.isPending && styles.logoutButtonDisabled]} onPress={handleLogout} disabled={logoutMutation.isPending}>
-                    {logoutMutation.isPending ? (
-                        <ActivityIndicator size="small" color={COLORS.background} />
-                    ) : (
-                        <>
-                            <Text style={styles.logoutIcon}>🚪</Text>
-                            <Text style={styles.logoutText}>Logout</Text>
-                        </>
-                    )}
+                <TouchableOpacity
+                    style={[styles.logoutButton, /* logoutMutation.isPending && */ styles.logoutButtonDisabled]}
+                    onPress={handleLogout}
+                    disabled={/* logoutMutation.isPending */ false}
+                >
+                    {/* {logoutMutation.isPending ? ( */}
+                    <ActivityIndicator size="small" color={COLORS.background} />
+                    {/* ) : ( */}
+                    <>
+                        <Text style={styles.logoutIcon}>🚪</Text>
+                        <Text style={styles.logoutText}>Logout</Text>
+                    </>
+                    {/* )} */}
                 </TouchableOpacity>
             </View>
         </View>

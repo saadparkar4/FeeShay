@@ -1,14 +1,14 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
 import { COLORS } from "../../constants/Colors";
-import { useMyJobs } from "../../src/hooks/useQueries";
+import { useJobs } from "../../src/hooks/useQueries";
 
 interface JobPostCardProps {
     onJobPress: (jobId: string) => void;
 }
 
 export default function JobPostCard({ onJobPress }: JobPostCardProps) {
-    const { data: jobsData, isLoading, error, refetch } = useMyJobs();
+    const { data: jobsData, isLoading, error, refetch } = useJobs();
 
     const handleRefresh = async () => {
         try {

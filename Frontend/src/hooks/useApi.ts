@@ -1,5 +1,12 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { ApiResponse } from "../api/client";
+
+// Generic API response interface
+interface ApiResponse<T> {
+    success: boolean;
+    data?: T;
+    message?: string;
+    error?: string;
+}
 
 interface UseApiState<T> {
     data: T | null;
@@ -41,7 +48,7 @@ export const useApi = <T>(
                     });
                     options?.onSuccess?.(response.data);
                 } else {
-                    const errorMessage = response.error || "An error occurred";
+                    const errorMessage = response.error || response.message || "An error occurred";
                     setState({
                         data: null,
                         loading: false,
@@ -133,7 +140,7 @@ export function usePaginatedApi<T = any>(
                     setPage(currentPage);
                     setHasMore(currentPage * limit < totalCount);
                 } else {
-                    const errorMessage = response.error || "An error occurred";
+                    const errorMessage = response.error || response.message || "An error occurred";
                     setError(errorMessage);
                 }
             } catch (err: any) {
@@ -204,7 +211,7 @@ export function useRealtimeApi<T = any>(
             if (response.success && response.data) {
                 setData(response.data);
             } else {
-                const errorMessage = response.error || "An error occurred";
+                const errorMessage = response.error || response.message || "An error occurred";
                 setError(errorMessage);
             }
         } catch (err: any) {
@@ -215,11 +222,6 @@ export function useRealtimeApi<T = any>(
         }
     }, [apiFunction]);
 
-    const refetch = useCallback(async () => {
-        await fetchData();
-    }, [fetchData]);
-
-    // Set up interval for real-time updates
     useEffect(() => {
         fetchData();
 
@@ -232,8 +234,6 @@ export function useRealtimeApi<T = any>(
         data,
         loading,
         error,
-        refetch,
+        refetch: fetchData,
     };
 }
-
-export default useApi;

@@ -7,11 +7,21 @@ const queryClient = new QueryClient({
         queries: {
             staleTime: 5 * 60 * 1000, // 5 minutes
             gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
-            retry: 1,
+            retry: (failureCount, error: any) => {
+                // Don't retry on 4xx errors
+                if (error?.response?.status >= 400 && error?.response?.status < 500) {
+                    return false;
+                }
+                return failureCount < 2;
+            },
             refetchOnWindowFocus: false,
+            refetchOnReconnect: true,
         },
         mutations: {
             retry: 1,
+            onError: (error: any) => {
+                console.error("Mutation error:", error);
+            },
         },
     },
 });
