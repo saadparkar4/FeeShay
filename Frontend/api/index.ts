@@ -3,7 +3,7 @@ import { getToken } from "./storage";
 
 const instance = axios.create({
   // baseURL: "http://localhost:3000",
-  baseURL: "http://localhost:3000/api/v1",
+  baseURL: "http://localhost:3000",
 });
 
 instance.interceptors.request.use(async (req) => {

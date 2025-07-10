@@ -233,10 +233,10 @@ const JobPostCard = ({ job }: { job: JobPostData }) => {
         >
           <Text style={styles.viewButtonText}>
             {job.status === 'open' 
-              ? 'View Proposals'      // See submitted proposals
+              ? 'View Proposals'
               : job.status === 'in_progress' 
-              ? 'Manage Project'      // Manage ongoing work
-              : 'Project Completed'}  // View completed project
+              ? 'Manage Project'
+              : 'Project Completed'}
           </Text>
         </LinearGradient>
       </TouchableOpacity>

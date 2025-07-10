@@ -288,7 +288,10 @@ export default function JobDetailsScreen() {
       
         <View style={styles.actionButtons}>
         {/* Send Proposal Button */}
-        <TouchableOpacity style={styles.sendProposalButton}>
+        <TouchableOpacity 
+          style={styles.sendProposalButton}
+          onPress={() => router.push(`/(protected)/(tabs)/(home)/job/send-proposal?jobId=${id}`)}
+        >
           <LinearGradient
             colors={[COLORS.accent, COLORS.accentSecondary]}
             style={styles.sendProposalGradient}

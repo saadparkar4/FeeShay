@@ -12,6 +12,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { COLORS, getCategoryColors } from '../../constants/Colors';
 
@@ -48,8 +49,8 @@ export default function JobCard({ job }: JobCardProps) {
   };
 
   return (
-    // Make the entire card tappable for better UX
-    <TouchableOpacity style={styles.card} onPress={handlePress} activeOpacity={0.7}>
+    // Remove the touchable from the whole card
+    <View style={styles.card}>
       {/* Left: Service image */}
       <View style={styles.imageWrapper}>
         <Image source={{ uri: job.image }} style={styles.image} resizeMode="cover" />
@@ -63,11 +64,6 @@ export default function JobCard({ job }: JobCardProps) {
           <Image source={{ uri: job.sellerAvatar }} style={styles.avatar} />
           <Text style={styles.sellerName}>{job.sellerName}</Text>
         </View>
-        {/* Rating row */}
-        <View style={styles.ratingRow}>
-          <Ionicons name="star" size={13} color={COLORS.warning} />
-          <Text style={styles.ratingText}>{job.rating.toFixed(1)} <Text style={styles.ratingCount}>({job.ratingCount})</Text></Text>
-        </View>
         {/* Footer: Category badge & price */}
         <View style={styles.footerRow}>
           <View style={[styles.categoryBadge, { backgroundColor: categoryColors.bg }]}> 
@@ -75,8 +71,19 @@ export default function JobCard({ job }: JobCardProps) {
           </View>
           <Text style={styles.price}>{job.price} KD</Text>
         </View>
+        {/* Apply button centered */}
+        <TouchableOpacity style={styles.applyButton} onPress={handlePress} activeOpacity={0.8}>
+          <LinearGradient
+            colors={[COLORS.accent, COLORS.accentSecondary]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.gradientButton}
+          >
+            <Text style={styles.applyButtonText}>Apply</Text>
+          </LinearGradient>
+        </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -84,7 +91,7 @@ export default function JobCard({ job }: JobCardProps) {
 // STYLES FOR SERVICE CARD
 // ============================================================================
 const styles = StyleSheet.create({
-  // Main card container - now a TouchableOpacity for tap handling
+  // Main card container - no longer touchable
   card: {
     flexDirection: 'row',
     backgroundColor: COLORS.background,
@@ -97,11 +104,11 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     overflow: 'hidden',
     marginBottom: 4,
-    minHeight: 112,
+    minHeight: 140,
   },
   imageWrapper: {
     width: 100,
-    height: 112,
+    height: 140,
     backgroundColor: COLORS.border,
   },
   image: {
@@ -172,5 +179,22 @@ const styles = StyleSheet.create({
     color: COLORS.accent,
     fontWeight: 'bold',
     fontSize: 15,
+  },
+  applyButton: {
+    width: '100%',
+    height: 36,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginTop: 8,
+  },
+  gradientButton: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  applyButtonText: {
+    color: COLORS.background,
+    fontSize: 14,
+    fontWeight: '600',
   },
 }); 

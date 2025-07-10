@@ -14,11 +14,13 @@
 // TODO: Add error handling for broken image URLs
 // ============================================================================
 
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../../constants/Colors';
+import { useRouter } from 'expo-router';
+import ConfirmationModal from '../Common/ConfirmationModal';
 
 // Talent data interface
 interface Talent {
@@ -41,6 +43,9 @@ interface TalentCardProps {
 }
 
 export default function TalentCard({ talent, borderColor }: TalentCardProps) {
+  const router = useRouter();
+  const [showHireModal, setShowHireModal] = useState(false);
+
   // Determine skill tag colors based on index
   const getSkillColor = (index: number) => {
     const colors = [
@@ -51,9 +56,15 @@ export default function TalentCard({ talent, borderColor }: TalentCardProps) {
     return colors[index % colors.length];
   };
 
+  // const handleConfirmHire = () => {
+  //   // Navigate to hire/proposal page
+  //   router.push(`/(protected)/(tabs)/(home)/job/send-proposal?talentId=${talent.id}&talentName=${talent.name}`);
+  // };
+
   return (
-    <View style={[styles.talentCard, borderColor && { borderColor: `${borderColor}20` }]}>
-      <View style={styles.mainContent}>
+    <>
+      <View style={[styles.talentCard, borderColor && { borderColor: `${borderColor}20` }]}>
+        <View style={styles.mainContent}>
         {/* Profile avatar image */}
         {talent.avatar && talent.avatar.trim() !== '' ? (
           <Image 
@@ -104,7 +115,7 @@ export default function TalentCard({ talent, borderColor }: TalentCardProps) {
             
           {/* Action buttons */}
           <View style={styles.buttonsContainer}>
-            <TouchableOpacity style={styles.hireButton} activeOpacity={0.8}>
+            <TouchableOpacity style={styles.hireButton} activeOpacity={0.8} onPress={() => setShowHireModal(true)}>
               <LinearGradient
                 colors={[COLORS.accent, COLORS.accentSecondary]}
                 start={{ x: 0, y: 0 }}
@@ -122,6 +133,28 @@ export default function TalentCard({ talent, borderColor }: TalentCardProps) {
         </View>
       </View>
     </View>
+
+    {/* Hire Confirmation Modal */}
+    <ConfirmationModal
+        visible={showHireModal}
+        onClose={() => setShowHireModal(false)}
+        onConfirm={() => {}}
+        title={`Ready to hire ${talent.name}?`}
+        message={`You're about to start a project with one of our top ${talent.category} professionals. ${talent.name} has a ${talent.rating} star rating with ${talent.reviewCount} successful projects.`}
+        icon="briefcase"
+        confirmText="Continue to Hire"
+        cancelText="Maybe Later"
+        preview={{
+          avatar: talent.avatar,
+          title: talent.name,
+          subtitle: talent.title,
+          rating: {
+            value: talent.rating,
+            count: talent.reviewCount,
+          },
+        }}
+      />
+    </>
   );
 }
 
