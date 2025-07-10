@@ -11,24 +11,44 @@
 // - Language selector and footer links
 // ============================================================================
 
-import React from 'react';
+import React, { useContext, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { COLORS } from '../../constants/Colors';
+import AuthContext from '@/context/AuthContext';
 
-interface WelcomeScreenProps {
-  onSignIn?: () => void;
-  onSignUp?: () => void;
-  onGoogleLogin?: () => void;
-  onAppleLogin?: () => void;
-}
+export default function WelcomeScreen() {
+  const { setIsAuthenticated } = useContext(AuthContext);
 
-export default function WelcomeScreen({ 
-  onSignIn, 
-  onSignUp, 
-  onGoogleLogin, 
-  onAppleLogin 
-}: WelcomeScreenProps) {
+  // ============================================================================
+  // NAVIGATION HANDLERS
+  // ============================================================================
+  const handleSignIn = () => {
+    router.push('/(auth)/Login');
+  };
+
+  const handleSignUp = () => {
+    router.push('/(auth)/Register');
+  };
+
+  const handleGoogleLogin = () => {
+    // TODO: Implement Google OAuth
+    console.log('Google login pressed');
+    // After successful login, navigate to main app
+    setIsAuthenticated(true);
+    router.replace('/');
+  };
+
+  const handleAppleLogin = () => {
+    // TODO: Implement Apple Sign In
+    console.log('Apple login pressed');
+    // After successful login, navigate to main app
+    setIsAuthenticated(true);
+    router.replace('/');
+  };
+
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView 
@@ -68,7 +88,7 @@ export default function WelcomeScreen({
           {/* Sign In Button */}
           <TouchableOpacity 
             style={styles.signInButton}
-            onPress={onSignIn}
+            onPress={handleSignIn}
             activeOpacity={0.8}
           >
             <Text style={styles.signInButtonText}>Sign In</Text>
@@ -77,7 +97,7 @@ export default function WelcomeScreen({
           {/* Sign Up Button */}
           <TouchableOpacity 
             style={styles.signUpButton}
-            onPress={onSignUp}
+            onPress={handleSignUp}
             activeOpacity={0.8}
           >
             <Text style={styles.signUpButtonText}>Sign Up</Text>
@@ -97,7 +117,7 @@ export default function WelcomeScreen({
               {/* Google Button */}
               <TouchableOpacity 
                 style={styles.socialButton}
-                onPress={onGoogleLogin}
+                onPress={handleGoogleLogin}
                 activeOpacity={0.8}
               >
                 <Ionicons name="logo-google" size={20} color="#4285F4" />
@@ -107,7 +127,7 @@ export default function WelcomeScreen({
               {/* Apple Button */}
               <TouchableOpacity 
                 style={styles.socialButton}
-                onPress={onAppleLogin}
+                onPress={handleAppleLogin}
                 activeOpacity={0.8}
               >
                 <Ionicons name="logo-apple" size={20} color="#000000" />
@@ -156,14 +176,12 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingVertical: 0,
   },
 
   // Logo Section
   logoSection: {
     alignItems: 'center',
     marginTop: 2,
-    marginBottom: 2,
   },
 
   logoContainer: {
@@ -196,7 +214,6 @@ const styles = StyleSheet.create({
   // Hero Section
   heroSection: {
     alignItems: 'center',
-    marginVertical: 24,
   },
 
   heroImage: {
@@ -208,7 +225,7 @@ const styles = StyleSheet.create({
   // Welcome Text Section
   welcomeTextSection: {
     alignItems: 'center',
-    marginVertical: 10,
+    marginVertical: 24,
   },
 
   welcomeTitle: {
@@ -228,7 +245,7 @@ const styles = StyleSheet.create({
 
   // Action Buttons Section
   actionButtonsSection: {
-    marginVertical: 10,
+    marginVertical: 24,
     gap: 16,
   },
 

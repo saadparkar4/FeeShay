@@ -15,8 +15,9 @@
 // ============================================================================
 
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../../constants/Colors';
 
 // Talent data interface
@@ -24,56 +25,99 @@ interface Talent {
   id: string;           // Unique identifier
   name: string;         // Full name of the talent
   title: string;        // Professional title/role
-  location: string;     // City and country
+  location?: string;    // City and country (optional)
   rating: number;       // Star rating (0-5)
-  price: number;        // Hourly rate in USD
+  reviewCount: number;  // Number of reviews
+  price: number;        // Starting rate in USD
   avatar: string;       // Profile image URL
   category: string;     // Professional category
+  skills: string[];     // Array of skills
 }
 
 // Props interface for TalentCard component
 interface TalentCardProps {
   talent: Talent;  // Talent data object
+  borderColor?: string; // Optional border color
 }
 
-export default function TalentCard({ talent }: TalentCardProps) {
+export default function TalentCard({ talent, borderColor }: TalentCardProps) {
+  // Determine skill tag colors based on index
+  const getSkillColor = (index: number) => {
+    const colors = [
+      { bg: `${COLORS.accent}20`, text: COLORS.accent },
+      { bg: `${COLORS.accentSecondary}20`, text: COLORS.accentSecondary },
+      { bg: `${COLORS.accentTertiary}20`, text: COLORS.accentTertiary },
+    ];
+    return colors[index % colors.length];
+  };
+
   return (
-    <View style={styles.talentCard}>
-      {/* Profile avatar image */}
-      <Image source={{ uri: talent.avatar }} style={styles.avatar} />
-      
-      {/* Main content area */}
-      <View style={styles.content}>
-        {/* Header with name and rating */}
-        <View style={styles.header}>
-          <Text style={styles.talentName}>{talent.name}</Text>
-          <View style={styles.ratingContainer}>
-            <Ionicons name="star" size={14} color={COLORS.warning} />
-            <Text style={styles.ratingText}>{talent.rating}</Text>
+    <View style={[styles.talentCard, borderColor && { borderColor: `${borderColor}20` }]}>
+      <View style={styles.mainContent}>
+        {/* Profile avatar image */}
+        {talent.avatar && talent.avatar.trim() !== '' ? (
+          <Image 
+            source={{ uri: talent.avatar }} 
+            style={[styles.avatar, borderColor && { borderColor: `${borderColor}30` }]} 
+          />
+        ) : (
+          <View style={[styles.avatar, styles.avatarPlaceholder, borderColor && { borderColor: `${borderColor}30` }]}>
+            <Text style={styles.avatarText}>{talent.name.charAt(0).toUpperCase()}</Text>
           </View>
-        </View>
+        )}
         
-        {/* Talent title/profession */}
-        <Text style={styles.talentTitle}>{talent.title}</Text>
-        
-        {/* Location information */}
-        <View style={styles.locationWrapper}>
-          <Ionicons name="location-sharp" size={13} color={COLORS.primary} style={{ marginRight: 2 }} />
-          <Text style={styles.locationText}>{talent.location}</Text>
-        </View>
-        
-        {/* Footer with pricing and action button */}
-        <View style={styles.cardFooter}>
-          {/* Pricing information */}
-          <View>
-            <Text style={styles.startingAt}>Starting at</Text>
-            <Text style={styles.price}>{talent.price} KD</Text>
+        {/* Content area */}
+        <View style={styles.content}>
+          {/* Header section */}
+          <View style={styles.headerSection}>
+            {/* Left side: Name and title */}
+            <View style={styles.leftHeader}>
+              <Text style={styles.talentName}>{talent.name}</Text>
+              <Text style={styles.talentTitle}>{talent.title}</Text>
+            </View>
+            
+            {/* Right side: Rating and price */}
+            <View style={styles.rightHeader}>
+              <View style={styles.ratingContainer}>
+                <Ionicons name="star" size={14} color={COLORS.warning} />
+                <Text style={styles.ratingText}>{talent.rating}</Text>
+                <Text style={styles.reviewCount}>({talent.reviewCount})</Text>
+              </View>
+              <Text style={styles.price}>Starting at ${talent.price}</Text>
+            </View>
           </View>
           
-          {/* View profile button */}
-          <TouchableOpacity style={styles.profileBtn}>
-            <Text style={styles.profileBtnText}>View Profile</Text>
-          </TouchableOpacity>
+          {/* Skills tags */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.skillsContainer}>
+            {talent.skills.slice(0, 3).map((skill, index) => {
+              const colors = getSkillColor(index);
+              return (
+                <View key={index} style={[styles.skillTag, { backgroundColor: colors.bg }]}>
+                  <Text style={[styles.skillText, { color: colors.text }]}>{skill}</Text>
+                </View>
+              );
+            })}
+          </View>
+          </ScrollView>
+            
+          {/* Action buttons */}
+          <View style={styles.buttonsContainer}>
+            <TouchableOpacity style={styles.hireButton} activeOpacity={0.8}>
+              <LinearGradient
+                colors={[COLORS.accent, COLORS.accentSecondary]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.gradientButton}
+              >
+                <Text style={styles.hireButtonText}>Hire Now</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.profileButton} activeOpacity={0.8}>
+              <Text style={styles.profileButtonText}>View Profile</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </View>
@@ -88,16 +132,21 @@ const styles = StyleSheet.create({
   talentCard: {
     backgroundColor: COLORS.background,
     borderRadius: 16,
-    padding: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: `${COLORS.accent}10`,
+  },
+  
+  // Main content wrapper
+  mainContent: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 12,
-    shadowColor: COLORS.cardShadow,
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    shadowOffset: { width: 0, height: 1 },
-    borderWidth: 0.8,
-    borderColor: COLORS.border,
   },
   
   // Profile avatar image
@@ -105,104 +154,155 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    marginRight: 8,
-    backgroundColor: COLORS.border,
-    borderWidth: 0.8,
-    borderColor: COLORS.border,
+    marginRight: 16,
+    backgroundColor: COLORS.muted,
+    borderWidth: 2,
+    borderColor: `${COLORS.accent}20`,
   },
   
-  // Main content area
+  // Avatar placeholder when no image
+  avatarPlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.accent,
+  },
+  
+  // Avatar text for initials
+  avatarText: {
+    color: COLORS.white,
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  
+  // Content area
   content: {
     flex: 1,
   },
   
-  // Header with name and rating
-  header: {
+  // Header section with name/title and rating/price
+  headerSection: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  
+  // Left header with name and title
+  leftHeader: {
+    flex: 1,
+  },
+  
+  // Right header with rating and price
+  rightHeader: {
+    alignItems: 'flex-end',
   },
   
   // Talent name styling
   talentName: {
     fontWeight: 'bold',
-    fontSize: 17,
+    fontSize: 16,
     color: COLORS.textPrimary,
-  },
-  
-  // Rating container
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  
-  // Rating text styling
-  ratingText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#92400E',
-    marginLeft: 2,
+    marginBottom: 4,
   },
   
   // Talent title/profession
   talentTitle: {
     fontSize: 14,
     color: COLORS.textSecondary,
-    marginTop: 2,
   },
   
-  // Location wrapper
-  locationWrapper: {
+  // Rating container
+  ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
+    marginBottom: 4,
   },
   
-  // Location text styling
-  locationText: {
-    fontSize: 13,
-    color: COLORS.textSecondary,
+  // Rating text styling
+  ratingText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+    marginLeft: 4,
   },
   
-  // Card footer with pricing and button
-  cardFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 14,
-  },
-  
-  // "Starting at" text
-  startingAt: {
+  // Review count
+  reviewCount: {
     fontSize: 12,
     color: COLORS.textSecondary,
+    marginLeft: 2,
   },
   
-  // Price text styling
+  // Price text
   price: {
+    fontSize: 14,
     fontWeight: 'bold',
     color: COLORS.accent,
-    fontSize: 16,
-    marginTop: 2,
   },
   
-  // View profile button
-  profileBtn: {
-    backgroundColor: COLORS.accentTertiary,
-    borderRadius: 80,
-    paddingHorizontal: 18,
-    paddingVertical: 7,
+  // Skills container
+  skillsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
+  
+  // Individual skill tag
+  skillTag: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  
+  // Skill text
+  skillText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  
+  // Buttons container
+  buttonsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  
+  // Hire button wrapper
+  hireButton: {
+    flex: 1,
+    height: 40,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  
+  // Gradient button style
+  gradientButton: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  // Hire button text
+  hireButtonText: {
+    color: COLORS.background,
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  
+  // Profile button
+  profileButton: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 20,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   
   // Profile button text
-  profileBtnText: {
-    color: COLORS.background,
-    fontWeight: '500',
-    fontSize: 15,
+  profileButtonText: {
+    color: COLORS.textPrimary,
+    fontWeight: '600',
+    fontSize: 14,
   },
 }); 

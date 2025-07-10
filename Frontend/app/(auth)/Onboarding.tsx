@@ -24,6 +24,7 @@ import {
   Animated
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { COLORS } from '../../constants/Colors';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -41,11 +42,6 @@ interface OnboardingPage {
   hasSecondaryIcon?: boolean;
   secondaryIcon?: string;
   secondaryIconColor?: string;
-}
-
-interface OnboardingScreenProps {
-  onComplete?: () => void;
-  onSkip?: () => void;
 }
 
 // ============================================================================
@@ -98,7 +94,7 @@ const onboardingPages: OnboardingPage[] = [
 // ============================================================================
 // ONBOARDING SCREEN COMPONENT
 // ============================================================================
-export default function OnboardingScreen({ onComplete, onSkip }: OnboardingScreenProps) {
+export default function OnboardingScreen() {
   const [currentPage, setCurrentPage] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -151,10 +147,10 @@ export default function OnboardingScreen({ onComplete, onSkip }: OnboardingScree
         });
       });
     } else {
-      // Last page - complete onboarding
+      // Last page - navigate to welcome screen
       startBounceAnimation();
       setTimeout(() => {
-        onComplete?.();
+        router.push('/(auth)/Welcome');
       }, 200);
     }
   };
@@ -162,7 +158,7 @@ export default function OnboardingScreen({ onComplete, onSkip }: OnboardingScree
   const handleSkip = () => {
     startBounceAnimation();
     setTimeout(() => {
-      onSkip?.();
+      router.push('/(auth)/Welcome');
     }, 200);
   };
 
@@ -248,8 +244,13 @@ export default function OnboardingScreen({ onComplete, onSkip }: OnboardingScree
     <View key={page.id} style={styles.pageContainer}>
       {/* Logo Section */}
       <View style={styles.logoSection}>
-        <Text style={styles.logoFee}>Fee</Text>
-        <Text style={styles.logoShay}>Shay</Text>
+        <View style={styles.logoContainer}>
+          <View style={styles.logoText}>
+            <Text style={styles.logoFee}>Fee</Text>
+            <Text style={styles.logoShay}>Shay</Text>
+          </View>
+          <Text style={styles.tagline}>Find. Hire. Thrive.</Text>
+        </View>
       </View>
 
       {/* Hero Illustration */}
@@ -328,15 +329,7 @@ export default function OnboardingScreen({ onComplete, onSkip }: OnboardingScree
                 <Text style={styles.skipButtonText}>Skip</Text>
               </TouchableOpacity>
 
-              <Animated.View style={{ transform: [{ scale: bounceAnim }] }}>
-                <TouchableOpacity
-                  style={styles.nextButton}
-                  onPress={goToNextPage}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.nextButtonText}>Next</Text>
-                </TouchableOpacity>
-              </Animated.View>
+              
             </>
           ) : (
             <Animated.View style={[styles.getStartedContainer, { transform: [{ scale: bounceAnim }] }]}>
@@ -380,25 +373,40 @@ const styles = StyleSheet.create({
   },
 
   // Logo Section
+  // Logo Section
   logoSection: {
+    alignItems: 'center',
+    marginTop: 0,
+    marginBottom: 36,
+  },
+
+  logoContainer: {
+    alignItems: 'center',
+  },
+
+  logoText: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-    marginBottom: 16,
   },
 
   logoFee: {
-    fontSize: 20,
+    fontSize: 30,
     fontWeight: 'bold',
     color: COLORS.accent,
   },
 
   logoShay: {
-    fontSize: 20,
+    fontSize: 30,
     fontWeight: 'bold',
     color: COLORS.accentTertiary,
   },
+
+  tagline: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginTop: 0,
+  },
+
 
   // Hero Section
   heroSection: {

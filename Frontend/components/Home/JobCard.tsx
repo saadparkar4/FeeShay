@@ -12,6 +12,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { COLORS, getCategoryColors } from '../../constants/Colors';
 
 // Note: Category colors are now managed centrally in Colors.ts
@@ -34,10 +35,21 @@ interface JobCardProps {
 }
 
 export default function JobCard({ job }: JobCardProps) {
+  // Get router for navigation to job details
+  const router = useRouter();
+  
+  // Get category-specific colors for the badge
   const categoryColors = getCategoryColors(job.category);
 
+  // Handle navigation to job details screen when card is tapped
+  const handlePress = () => {
+    // Navigate to job details screen with job ID as parameter
+    router.push(`/(protected)/(tabs)/(home)/job/${job.id}`);
+  };
+
   return (
-    <View style={styles.card}>
+    // Make the entire card tappable for better UX
+    <TouchableOpacity style={styles.card} onPress={handlePress} activeOpacity={0.7}>
       {/* Left: Service image */}
       <View style={styles.imageWrapper}>
         <Image source={{ uri: job.image }} style={styles.image} resizeMode="cover" />
@@ -64,7 +76,7 @@ export default function JobCard({ job }: JobCardProps) {
           <Text style={styles.price}>{job.price} KD</Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -72,6 +84,7 @@ export default function JobCard({ job }: JobCardProps) {
 // STYLES FOR SERVICE CARD
 // ============================================================================
 const styles = StyleSheet.create({
+  // Main card container - now a TouchableOpacity for tap handling
   card: {
     flexDirection: 'row',
     backgroundColor: COLORS.background,

@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, ScrollView, SafeAreaView, Platform } from 'react-native';
 import Constants from 'expo-constants';
-import TopBar from '../../../components/Home/TopBar';
-import SearchBar from '../../../components/Home/SearchBar';
-import CategoryScroll from '../../../components/Home/CategoryScroll';
-import ToggleBar from '../../../components/Home/ToggleBar';
-import TalentCard from '../../../components/Home/TalentCard';
-import JobCard from '../../../components/Home/JobCard';
-import Fab from '../../../components/Home/Fab';
-import { COLORS } from '../../../constants/Colors';
+import TopBar from '../../../../components/Home/TopBar';
+import SearchBar from '../../../../components/Home/SearchBar';
+import CategoryScroll from '../../../../components/Home/CategoryScroll';
+import ToggleBar from '../../../../components/Home/ToggleBar';
+import TalentCard from '../../../../components/Home/TalentCard';
+import JobCard from '../../../../components/Home/JobCard';
+import Fab from '../../../../components/Home/Fab';
+import { COLORS } from '../../../../constants/Colors';
 
 // ============================================================================
 // DYNAMIC CATEGORY GENERATION
@@ -27,53 +27,63 @@ const getDynamicCategories = (data: any[]) => {
 const talents = [
   {
     id: '1',
-    name: 'Sarah Johnson',
-    title: 'UI/UX Designer & Illustrator',
+    name: 'Alex Johnson',
+    title: 'Logo & Brand Designer',
     location: 'New York, US',
-    rating: 4.9,
-    price: 45,
-    avatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg',
+    rating: 4.8,
+    reviewCount: 156,
+    price: 75,
+    avatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg',
     category: 'Graphic Designing',
+    skills: ['Logo Design', 'Branding', 'Illustration'],
   },
   {
     id: '2',
-    name: 'Michael Chen',
-    title: 'Full Stack Developer',
+    name: 'Sophia Lee',
+    title: 'Full-Stack Developer',
     location: 'San Francisco, US',
-    rating: 4.7,
-    price: 60,
-    avatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg',
+    rating: 4.9,
+    reviewCount: 203,
+    price: 120,
+    avatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg',
     category: 'Web Development',
+    skills: ['React', 'Node.js', 'MongoDB'],
   },
   {
     id: '3',
-    name: 'Emma Rodriguez',
-    title: 'Content Writer & SEO Expert',
+    name: 'Marcus Chen',
+    title: 'Digital Marketing Expert',
     location: 'Austin, US',
-    rating: 5.0,
-    price: 35,
-    avatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg',
-    category: 'Content Writing',
+    rating: 4.6,
+    reviewCount: 89,
+    price: 55,
+    avatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-8.jpg',
+    category: 'Digital Marketing',
+    skills: ['SEO', 'Social Media', 'Analytics'],
   },
   {
     id: '4',
-    name: 'David Kim',
-    title: 'Digital Marketing Specialist',
+    name: 'Isabella Martinez',
+    title: 'Video Editor & Motion Designer',
     location: 'Los Angeles, US',
-    rating: 4.8,
-    price: 50,
-    avatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg',
-    category: 'Digital Marketing',
+    rating: 4.7,
+    reviewCount: 112,
+    price: 85,
+    avatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg',
+    category: 'Video Editing',
+    skills: ['Video Editing', 'After Effects', 'Animation'],
   },
   {
     id: '5',
-    name: 'Lisa Wang',
-    title: 'Video Editor & Motion Designer',
+    name: 'Sarah Johnson',
+    title: 'UI/UX Designer',
     location: 'Chicago, US',
-    rating: 4.6,
-    price: 40,
-    avatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg',
-    category: 'Video Editing',
+    rating: 4.9,
+    reviewCount: 178,
+    price: 95,
+    avatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg',
+    category: 'UI/UX Design',
+    skills: ['UI Design', 'User Research', 'Prototyping'],
   },
 ];
 
@@ -293,7 +303,12 @@ export default function HomeScreen() {
           {/* Content Section: Display filtered talents or jobs */}
           <View style={styles.cardsSection}>
             {tab === 'talents'
-              ? filteredTalents.map((talent) => <TalentCard key={talent.id} talent={talent} />)
+              ? filteredTalents.map((talent, index) => {
+                  // Alternate border colors like in the design
+                  const borderColors = [COLORS.accent, COLORS.accentTertiary, COLORS.accentSecondary, COLORS.accent];
+                  const borderColor = borderColors[index % borderColors.length];
+                  return <TalentCard key={talent.id} talent={talent} borderColor={borderColor} />
+                })
               : filteredJobs.map((job) => <JobCard key={job.id} job={job} />)
             }
             
@@ -326,7 +341,6 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.background,
-    paddingTop: Platform.OS === 'android' ? Constants.statusBarHeight : 0,
   },
   
   // Main container for the entire screen
@@ -338,7 +352,7 @@ const styles = StyleSheet.create({
   // Cards section container
   cardsSection: {
     paddingHorizontal: 16,
-    gap: 16,
+    gap: 5,
   },
 
   // No results container
