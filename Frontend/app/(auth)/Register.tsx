@@ -105,7 +105,9 @@ export default function RegisterScreen() {
 
   const clearError = (field: string) => {
     if (errors[field]) {
-      setErrors({...errors, [field]: undefined});
+      //       setErrors({...errors, [field]: undefined});
+
+      setErrors({...errors, [field]: ""});
     }
   };
 

@@ -62,7 +62,8 @@ export default function TalentCard({ talent, borderColor }: TalentCardProps) {
           />
         ) : (
           <View style={[styles.avatar, styles.avatarPlaceholder, borderColor && { borderColor: `${borderColor}30` }]}>
-            <Text style={styles.avatarText}>{talent.name.charAt(0).toUpperCase()}</Text>
+                        {/* <Text style={styles.avatarText}>{talent.name.charAt(0).toUpperCase()}</Text> */}
+            <Text style={styles.avatarText}>{talent.name ? talent.name.charAt(0).toUpperCase() : '?'}</Text>
           </View>
         )}
         
@@ -169,7 +170,8 @@ const styles = StyleSheet.create({
   
   // Avatar text for initials
   avatarText: {
-    color: COLORS.white,
+    // color: COLORS.white,
+    color: COLORS.background,
     fontSize: 24,
     fontWeight: 'bold',
   },

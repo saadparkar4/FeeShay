@@ -84,6 +84,7 @@ export default function ProposalDetailsScreen() {
           bgColor: '#EF444420',  // Light red background (20% opacity)
         };
       default:
+        
         return null; // Active proposals don't show a status badge
     }
   };
@@ -177,7 +178,6 @@ export default function ProposalDetailsScreen() {
             </View>
           </View>
 
-          {/* Skills container - displays project skills as colored badges */}
           <View style={styles.skillsContainer}>
             {data.project.skills.map((skill, index) => (
               <View
@@ -185,16 +185,14 @@ export default function ProposalDetailsScreen() {
                 style={[
                   styles.skillBadge,
                   {
-                    // Cycle through 4 different background colors based on index
-                    // This creates visual variety in the skill badges
                     backgroundColor:
                       index % 4 === 0
-                        ? COLORS.accentSecondary + '20'  // Purple with 20% opacity
+                        ? COLORS.accentSecondary + '20'
                         : index % 4 === 1
-                        ? COLORS.accentTertiary + '20'   // Blue with 20% opacity
+                        ? COLORS.accentTertiary + '20'
                         : index % 4 === 2
-                        ? COLORS.accent + '20'           // Pink with 20% opacity
-                        : '#E9D5FF',                     // Light purple
+                        ? COLORS.accent + '20'
+                        : '#E9D5FF',
                   },
                 ]}
               >
@@ -202,15 +200,14 @@ export default function ProposalDetailsScreen() {
                   style={[
                     styles.skillText,
                     {
-                      // Match text color to background color (but full opacity)
                       color:
                         index % 4 === 0
-                          ? COLORS.accentSecondary  // Purple text
+                          ? COLORS.accentSecondary
                           : index % 4 === 1
-                          ? COLORS.accentTertiary   // Blue text
+                          ? COLORS.accentTertiary
                           : index % 4 === 2
-                          ? COLORS.accent           // Pink text
-                          : '#9333EA',              // Dark purple text
+                          ? COLORS.accent
+                          : '#9333EA',
                     },
                   ]}
                 >
@@ -295,9 +292,7 @@ export default function ProposalDetailsScreen() {
       {/* Action Buttons - Only show for active proposals */}
       {status === 'active' && (
         <View style={styles.actionButtons}>
-          {/* All three buttons in a single horizontal row */}
-          <View style={styles.buttonsRow}>
-            {/* Accept button */}
+          <View style={styles.topButtonsRow}>
             <TouchableOpacity style={styles.acceptButtonWrapper}>
               <LinearGradient
                 colors={[COLORS.accent, COLORS.accentSecondary]}
@@ -305,27 +300,20 @@ export default function ProposalDetailsScreen() {
                 end={{ x: 1, y: 0 }}
                 style={styles.acceptButton}
               >
-                <Ionicons name="checkmark" size={18} color="white" />
-                <Text style={styles.acceptButtonText}>Accept</Text>
+                <Ionicons name="checkmark" size={20} color="white" />
+                <Text style={styles.acceptButtonText}>Accept Proposal</Text>
               </LinearGradient>
             </TouchableOpacity>
             
-            {/* Message button */}
-            <TouchableOpacity style={styles.messageButtonWrapper}>
-              <View style={styles.messageButton}>
-                <Ionicons name="chatbubble" size={18} color={COLORS.accentTertiary} />
-                <Text style={styles.messageButtonText}>Message</Text>
-              </View>
-            </TouchableOpacity>
-            
-            {/* Decline button */}
-            <TouchableOpacity style={styles.declineButtonWrapper}>
-              <View style={styles.declineButton}>
-                <Ionicons name="close" size={18} color={COLORS.textSecondary} />
-                <Text style={styles.declineButtonText}>Decline</Text>
-              </View>
+            <TouchableOpacity style={styles.messageButton}>
+              <Ionicons name="chatbubble" size={24} color={COLORS.accentTertiary} />
             </TouchableOpacity>
           </View>
+          
+          <TouchableOpacity style={styles.declineButton}>
+            <Ionicons name="close" size={20} color={COLORS.textSecondary} />
+            <Text style={styles.declineButtonText}>Decline Proposal</Text>
+          </TouchableOpacity>
         </View>
       )}
     </SafeAreaView>
@@ -609,7 +597,6 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     fontStyle: 'italic',
   },
-  // Bottom action buttons container
   actionButtons: {
     position: 'absolute',
     bottom: 0,
@@ -623,58 +610,42 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 10,
   },
-  // Horizontal row for all three buttons
-  buttonsRow: {
+  topButtonsRow: {
     flexDirection: 'row',
     gap: 12,
+    marginBottom: 12,
   },
-  // Accept button wrapper - takes up flexible space
   acceptButtonWrapper: {
-    flex: 2,  // Takes more space than other buttons
+    flex: 1,
   },
   acceptButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
+    paddingVertical: 16,
     borderRadius: 16,
-    gap: 6,
+    gap: 8,
   },
   acceptButtonText: {
     color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  // Message button wrapper
-  messageButtonWrapper: {
-    flex: 1.5,  // Medium space
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   messageButton: {
-    flexDirection: 'row',
+    backgroundColor: COLORS.accentTertiary + '20',
+    padding: 16,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.accentTertiary + '20',
-    paddingVertical: 14,
-    borderRadius: 16,
-    gap: 6,
-  },
-  messageButtonText: {
-    color: COLORS.accentTertiary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  // Decline button wrapper
-  declineButtonWrapper: {
-    flex: 1.5,  // Medium space
   },
   declineButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F3F4F6',
-    paddingVertical: 14,
+    backgroundColor: COLORS.background,
+    paddingVertical: 12,
     borderRadius: 16,
-    gap: 6,
+    gap: 8,
   },
   declineButtonText: {
     color: COLORS.textSecondary,
