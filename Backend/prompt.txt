@@ -1,0 +1,160 @@
+analyse the frontend and create a mongodb mongoose based backend with typescript frontend integrations along with the folder structure as it is in the backend folder, making sure the frontend layout isnt disturbed at all. the creations are to be done in the src folder and uploads only. 
+
+make sure the backend models schema is as below and can be amended as needed based on the frontend requirments and layouts. 
+import { Schema, model, Types } from 'mongoose';
+
+// User Schema
+const UserSchema = new Schema({
+  email: { type: String, required: true, unique: true },
+  password_hash: { type: String, required: true },
+  role: { type: String, enum: ['freelancer', 'client'], required: true },
+  created_at: { type: Date, default: Date.now },
+  last_login: { type: Date },
+  dark_mode: { type: Boolean, default: false },
+  is_active: { type: Boolean, default: true },
+});
+export const User = model('User', UserSchema);
+
+// FreelancerProfile Schema
+const FreelancerProfileSchema = new Schema({
+  user: { type: Types.ObjectId, ref: 'User', required: true },
+  name: { type: String, required: true },
+  bio: { type: String },
+  location: { type: String },
+  languages: [{ type: String }],
+  skills: [{ type: String }],
+  profile_image_url: { type: String },
+  member_since: { type: Date },
+  onboarding_complete: { type: Boolean, default: false },
+});
+export const FreelancerProfile = model('FreelancerProfile', FreelancerProfileSchema);
+
+// ClientProfile Schema
+const ClientProfileSchema = new Schema({
+  user: { type: Types.ObjectId, ref: 'User', required: true },
+  name: { type: String, required: true },
+  bio: { type: String },
+  location: { type: String },
+  languages: [{ type: String }],
+  profile_image_url: { type: String },
+  client_since: { type: Date },
+  onboarding_complete: { type: Boolean, default: false },
+});
+export const ClientProfile = model('ClientProfile', ClientProfileSchema);
+
+// Category Schema
+const CategorySchema = new Schema({
+  name: { type: String, required: true, unique: true },
+  description: { type: String },
+  icon_url: { type: String },
+});
+export const Category = model('Category', CategorySchema);
+
+// Job Schema
+const JobSchema = new Schema({
+  client: { type: Types.ObjectId, ref: 'ClientProfile', required: true },
+  title: { type: String, required: true },
+  description: { type: String },
+  category: { type: Types.ObjectId, ref: 'Category' },
+  budget_min: { type: Types.Decimal128 },
+  budget_max: { type: Types.Decimal128 },
+  is_internship: { type: Boolean, default: false },
+  status: { type: String, enum: ['open','in_progress','completed','cancelled'], default: 'open' },
+  created_at: { type: Date, default: Date.now },
+  updated_at: { type: Date, default: Date.now },
+  draft: { type: Boolean, default: false },
+});
+export const Job = model('Job', JobSchema);
+
+// Service Schema
+const ServiceSchema = new Schema({
+  freelancer: { type: Types.ObjectId, ref: 'FreelancerProfile', required: true },
+  title: { type: String, required: true },
+  description: { type: String },
+  category: { type: Types.ObjectId, ref: 'Category' },
+  price: { type: Types.Decimal128 },
+  delivery_time_days: { type: Number },
+  status: { type: String, enum: ['active','paused','archived'], default: 'active' },
+  created_at: { type: Date, default: Date.now },
+  updated_at: { type: Date, default: Date.now },
+});
+export const Service = model('Service', ServiceSchema);
+
+// Proposal Schema
+const ProposalSchema = new Schema({
+  job: { type: Types.ObjectId, ref: 'Job', required: true },
+  freelancer: { type: Types.ObjectId, ref: 'FreelancerProfile', required: true },
+  cover_letter: { type: String },
+  proposed_price: { type: Types.Decimal128 },
+  status: { type: String, enum: ['active','completed','cancelled','rejected'], default: 'active' },
+  created_at: { type: Date, default: Date.now },
+  updated_at: { type: Date, default: Date.now },
+});
+export const Proposal = model('Proposal', ProposalSchema);
+
+// Chat Schema
+const ChatSchema = new Schema({
+  user1: { type: Types.ObjectId, ref: 'User', required: true },
+  user2: { type: Types.ObjectId, ref: 'User', required: true },
+  created_at: { type: Date, default: Date.now },
+  last_message_at: { type: Date },
+});
+export const Chat = model('Chat', ChatSchema);
+
+// Message Schema
+const MessageSchema = new Schema({
+  chat: { type: Types.ObjectId, ref: 'Chat', required: true },
+  sender: { type: Types.ObjectId, ref: 'User', required: true },
+  content: { type: String },
+  sent_at: { type: Date, default: Date.now },
+  read_at: { type: Date },
+  language: { type: String },
+  translated_content: { type: String },
+});
+export const Message = model('Message', MessageSchema);
+
+// Review Schema
+const ReviewSchema = new Schema({
+  reviewer: { type: Types.ObjectId, ref: 'User', required: true },
+  reviewee: { type: Types.ObjectId, ref: 'User', required: true },
+  job: { type: Types.ObjectId, ref: 'Job' },
+  rating: { type: Number, min: 1, max: 5 },
+  comment: { type: String },
+  sentiment: { type: String, enum: ['positive','neutral','negative'] },
+  created_at: { type: Date, default: Date.now },
+});
+export const Review = model('Review', ReviewSchema);
+
+// Portfolio Schema
+const PortfolioSchema = new Schema({
+  freelancer: { type: Types.ObjectId, ref: 'FreelancerProfile', required: true },
+  title: { type: String, required: true },
+  description: { type: String },
+  image_url: { type: String },
+  created_at: { type: Date, default: Date.now },
+});
+export const Portfolio = model('Portfolio', PortfolioSchema);
+
+// AI Integration Schema
+const AIIntegrationSchema = new Schema({
+  user: { type: Types.ObjectId, ref: 'User', required: true },
+  type: { type: String, enum: ['chatbot','resume_parser','image_moderation','translation','sentiment_analysis','notification'] },
+  provider: { type: String },
+  api_key: { type: String },
+  last_used: { type: Date },
+});
+export const AIIntegration = model('AIIntegration', AIIntegrationSchema);
+
+// Notification Schema
+const NotificationSchema = new Schema({
+  user: { type: Types.ObjectId, ref: 'User', required: true },
+  type: { type: String, enum: ['message','proposal','review','system'] },
+  content: { type: String },
+  is_read: { type: Boolean, default: false },
+  created_at: { type: Date, default: Date.now },
+});
+export const Notification = model('Notification', NotificationSchema);
+
+Ensure the backend is fully functional and can be used to create, read, update and delete data from the database and the respective routes and controllers are properly defined with ecessary middlewares for multiple error handling and validation.
+
+use .env file for the database connection and other sensitive data.

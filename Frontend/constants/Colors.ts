@@ -79,8 +79,6 @@ export const CATEGORY_COLORS = {
   Gaming: { bg: '#FDF4FF', text: '#A21CAF' },        // Fuchsia
   // ADD NEW CATEGORIES HERE:
   // Fitness: { bg: '#F0FDF4', text: '#15803D' },    // Example: Green variant
-  // Fashion: { bg: '#FDF2F8', text: '#BE185D' },    // Example: Pink variant
-  // Food: { bg: '#FFFBEB', text: '#D97706' },       // Example: Amber variant
   
   default: { bg: COLORS.muted, text: COLORS.textSecondary }, // Gray fallback
 } as const;
