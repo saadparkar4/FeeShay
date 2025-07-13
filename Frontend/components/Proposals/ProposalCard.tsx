@@ -95,7 +95,7 @@ export function ProposalCard({ proposal, onViewDetails }: ProposalCardProps) {
 const styles = StyleSheet.create({
   // Main card container with shadow and border
   card: {
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.background,
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   viewDetailsButtonText: {
-    color: COLORS.white,
+    color: COLORS.background,
     fontSize: 14,
     fontWeight: '600',
   },

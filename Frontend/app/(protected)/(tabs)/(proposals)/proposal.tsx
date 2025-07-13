@@ -11,7 +11,7 @@
  * This screen helps users manage incoming proposals for their job posts
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useContext } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -20,10 +20,10 @@ import { ProposalCard, Proposal } from '@/components/Proposals/ProposalCard';
 import { TabBar, TabType } from '@/components/Proposals/TabBar';
 import { Pagination } from '@/components/Proposals/Pagination';
 import TopBar from '@/components/Home/TopBar';
+import AuthContext from '@/context/AuthContext';
 
-// Mock proposal data - In production, this would be fetched from an API
-// Each proposal represents a freelancer's offer for a job
-const mockProposals: Proposal[] = [
+// Mock proposal data for clients - proposals received from freelancers
+const mockReceivedProposals: Proposal[] = [
   {
     id: '1',
     freelancerName: 'Michael Chen',
@@ -92,9 +92,49 @@ const mockProposals: Proposal[] = [
   },
 ];
 
+// Mock proposal data for freelancers - proposals sent to clients
+const mockSentProposals: Proposal[] = [
+  {
+    id: '1',
+    freelancerName: 'John Smith', // Client name in this context
+    freelancerAvatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg',
+    projectTitle: 'E-commerce Website Development',
+    rating: 4.8,
+    price: 2500,
+    duration: '21 days',
+    description: 'My proposal for building your complete e-commerce platform with payment integration...',
+    status: 'active'
+  },
+  {
+    id: '2',
+    freelancerName: 'Tech Corp', // Client name
+    freelancerAvatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-6.jpg',
+    projectTitle: 'Mobile App UI/UX Design',
+    rating: 4.9,
+    price: 1800,
+    duration: '14 days',
+    description: 'Proposal for designing modern and intuitive UI/UX for your mobile application...',
+    status: 'active'
+  },
+  {
+    id: '3',
+    freelancerName: 'StartupXYZ', // Client name
+    freelancerAvatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-9.jpg',
+    projectTitle: 'Backend API Development',
+    rating: 5.0,
+    price: 3200,
+    duration: '30 days',
+    description: 'Complete backend API development with Node.js and PostgreSQL...',
+    status: 'completed'
+  },
+];
+
 export default function ProposalsScreen() {
   // Router for navigation to proposal details
   const router = useRouter();
+  
+  // Get user role from auth context
+  const { userRole } = useContext(AuthContext);
   
   // State for currently selected tab (Active/Completed/Cancelled)
   const [selectedTab, setSelectedTab] = useState<TabType>('Active');
@@ -104,6 +144,9 @@ export default function ProposalsScreen() {
   
   // Number of proposals to show per page
   const itemsPerPage = 4;
+
+  // Select the appropriate proposals based on user role
+  const proposals = userRole === 'client' ? mockReceivedProposals : mockSentProposals;
 
   // Filter proposals based on selected tab
   // Uses memoization to avoid unnecessary recalculations
@@ -115,8 +158,8 @@ export default function ProposalsScreen() {
       'Cancelled': 'cancelled'
     };
     // Return only proposals matching current tab status
-    return mockProposals.filter(p => p.status === statusMap[selectedTab]);
-  }, [selectedTab]);  // Recalculate when tab changes
+    return proposals.filter(p => p.status === statusMap[selectedTab]);
+  }, [selectedTab, proposals]);  // Recalculate when tab or role changes
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredProposals.length / itemsPerPage);
@@ -156,7 +199,11 @@ export default function ProposalsScreen() {
           {/* Page Header - Title and description */}
           <View style={styles.header}>
             <Text style={styles.title}>Proposals</Text>
-            <Text style={styles.subtitle}>Manage job proposals from freelancers</Text>
+            <Text style={styles.subtitle}>
+              {userRole === 'client' 
+                ? 'Manage job proposals from freelancers' 
+                : 'Track your submitted proposals'}
+            </Text>
           </View>
 
           {/* Tab Bar - Switch between proposal states */}
@@ -179,7 +226,11 @@ export default function ProposalsScreen() {
             ) : (
               // Empty state when no proposals match current filter
               <View style={styles.emptyState}>
-                <Text style={styles.emptyText}>No {selectedTab.toLowerCase()} proposals</Text>
+                <Text style={styles.emptyText}>
+                  {userRole === 'client' 
+                    ? `No ${selectedTab.toLowerCase()} proposals received`
+                    : `No ${selectedTab.toLowerCase()} proposals sent`}
+                </Text>
               </View>
             )}
           </View>

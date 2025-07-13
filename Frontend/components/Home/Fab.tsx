@@ -15,12 +15,20 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../../constants/Colors';
 
 export default function Fab() {
   return (
-    <TouchableOpacity style={styles.fab} onPress={() => alert('Create new content')}>
-      <Ionicons name="add" size={24} color={COLORS.background} />
+    <TouchableOpacity style={styles.fabTouchable} onPress={() => alert('Create new content')}>
+      <LinearGradient
+        colors={[COLORS.accent, COLORS.accentSecondary]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.fab}
+      >
+        <Ionicons name="add" size={28} color={COLORS.background} />
+      </LinearGradient>
     </TouchableOpacity>
   );
 }
@@ -29,22 +37,25 @@ export default function Fab() {
 // STYLES FOR FLOATING ACTION BUTTON
 // ============================================================================
 const styles = StyleSheet.create({
-  // Floating action button container
-  fab: {
+  // Touchable wrapper for FAB
+  fabTouchable: {
     position: 'absolute',
     bottom: 20,
     right: 20,
+    zIndex: 1000,
+  },
+  
+  // Floating action button container
+  fab: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: COLORS.accent,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
     elevation: 8,
-    zIndex: 1000,
   },
 }); 

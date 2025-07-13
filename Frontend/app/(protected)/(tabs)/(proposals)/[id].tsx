@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import {
   View,
   Text,
@@ -12,16 +12,17 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '@/constants/Colors';
+import AuthContext from '@/context/AuthContext';
 
 // Type definition for proposal status - helps TypeScript understand what values are allowed
 type ProposalStatus = 'active' | 'completed' | 'cancelled';
 
 // Mock data function - simulates fetching proposal data from an API
 // In a real app, this would be replaced with an actual API call
-const getProposalData = (id: string) => ({
+const getProposalData = (id: string, isClient: boolean) => ({
   freelancer: {
-    name: 'Alex Johnson',
-    title: 'Full Stack Developer',
+    name: isClient ? 'Alex Johnson' : 'Tech Solutions Inc.',
+    title: isClient ? 'Full Stack Developer' : 'Technology Company',
     location: 'San Francisco, CA',
     avatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg',
     rating: 4.7,
@@ -35,7 +36,9 @@ const getProposalData = (id: string) => ({
     status: 'active' as ProposalStatus,
   },
   proposal: {
-    description: `Hello! I'm excited to work on your e-commerce website redesign project. Based on your requirements, I'll deliver a modern, user-friendly online store that will enhance your customer experience and boost conversions.`,
+    description: isClient 
+      ? `Hello! I'm excited to work on your e-commerce website redesign project. Based on your requirements, I'll deliver a modern, user-friendly online store that will enhance your customer experience and boost conversions.`
+      : `This is my proposal for the e-commerce website redesign project. I have carefully reviewed the requirements and am confident I can deliver an exceptional solution that meets all your needs.`,
     deliverables: [
       'Complete UI/UX redesign with modern aesthetics',
       'Mobile-responsive design for all devices',
@@ -44,14 +47,20 @@ const getProposalData = (id: string) => ({
       'Performance optimization and SEO improvements',
       'Admin dashboard for easy management',
     ],
-    approach: `I'll use React.js for the frontend and Node.js for the backend, ensuring a fast and scalable solution. The project will be completed in 14 days with regular updates and revisions included.`,
-    closingNote: 'Looking forward to bringing your vision to life!',
+    approach: isClient
+      ? `I'll use React.js for the frontend and Node.js for the backend, ensuring a fast and scalable solution. The project will be completed in 14 days with regular updates and revisions included.`
+      : `My approach involves using modern technologies including React.js and Node.js. I will provide regular updates throughout the 14-day project timeline.`,
+    closingNote: isClient 
+      ? 'Looking forward to bringing your vision to life!'
+      : 'Thank you for considering my proposal. I look forward to your response.',
   },
   attachments: [
     { type: 'image', name: 'Design Mockup', file: 'portfolio_sample.jpg', icon: 'image' },
     { type: 'pdf', name: 'Project Plan', file: 'timeline_plan.pdf', icon: 'document' },
   ],
-  personalNote: `I noticed your current website has some performance issues. I'll make sure to optimize the loading speed and implement best practices for better user experience. I'm also available for a quick call to discuss any specific requirements you might have!`,
+  personalNote: isClient
+    ? `I noticed your current website has some performance issues. I'll make sure to optimize the loading speed and implement best practices for better user experience. I'm also available for a quick call to discuss any specific requirements you might have!`
+    : `Additional notes: I've included my portfolio samples and a detailed project plan in the attachments. Feel free to reach out if you need any clarification or have questions about my proposal.`,
 });
 
 export default function ProposalDetailsScreen() {
@@ -61,8 +70,12 @@ export default function ProposalDetailsScreen() {
   // Router hook for navigation (e.g., going back to previous screen)
   const router = useRouter();
   
+  // Get user role from auth context
+  const { userRole } = useContext(AuthContext);
+  const isClient = userRole === 'client';
+  
   // Fetch proposal data using the ID from URL params
-  const data = getProposalData(id as string);
+  const data = getProposalData(id as string, isClient);
   
   // Determine the proposal status - use the one from URL params if available,
   // otherwise fall back to the default status from mock data
@@ -114,7 +127,7 @@ export default function ProposalDetailsScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
-        {/* Freelancer Header Card */}
+        {/* Freelancer/Client Header Card */}
         <View style={[styles.card, styles.freelancerCard]}>
           <View style={styles.freelancerInfo}>
             <Image source={{ uri: data.freelancer.avatar }} style={styles.avatar} />
@@ -292,28 +305,65 @@ export default function ProposalDetailsScreen() {
       {/* Action Buttons - Only show for active proposals */}
       {status === 'active' && (
         <View style={styles.actionButtons}>
-          <View style={styles.topButtonsRow}>
-            <TouchableOpacity style={styles.acceptButtonWrapper}>
-              <LinearGradient
-                colors={[COLORS.accent, COLORS.accentSecondary]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.acceptButton}
-              >
-                <Ionicons name="checkmark" size={20} color="white" />
-                <Text style={styles.acceptButtonText}>Accept Proposal</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.messageButton}>
-              <Ionicons name="chatbubble" size={24} color={COLORS.accentTertiary} />
-            </TouchableOpacity>
-          </View>
-          
-          <TouchableOpacity style={styles.declineButton}>
-            <Ionicons name="close" size={20} color={COLORS.textSecondary} />
-            <Text style={styles.declineButtonText}>Decline Proposal</Text>
-          </TouchableOpacity>
+          {isClient ? (
+            // Client actions: Accept/Decline proposal
+            <>
+              <View style={styles.topButtonsRow}>
+                <TouchableOpacity style={styles.acceptButtonWrapper}>
+                  <LinearGradient
+                    colors={[COLORS.accent, COLORS.accentSecondary]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.acceptButton}
+                  >
+                    <Ionicons name="checkmark" size={20} color="white" />
+                    <Text style={styles.acceptButtonText}>Accept Proposal</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={styles.messageButton}
+                  onPress={() => router.push({ pathname: "/(protected)/(tabs)/(messages)/[id]", params: { id: '1' } })}
+                >
+                  <Ionicons name="chatbubble" size={24} color={COLORS.accentTertiary} />
+                </TouchableOpacity>
+              </View>
+              
+              <TouchableOpacity style={styles.declineButton}>
+                <Ionicons name="close" size={20} color={COLORS.textSecondary} />
+                <Text style={styles.declineButtonText}>Decline Proposal</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            // Freelancer actions: Edit/Withdraw proposal
+            <>
+              <View style={styles.topButtonsRow}>
+                <TouchableOpacity style={styles.acceptButtonWrapper}>
+                  <LinearGradient
+                    colors={[COLORS.accent, COLORS.accentSecondary]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.acceptButton}
+                  >
+                    <Ionicons name="create" size={20} color="white" />
+                    <Text style={styles.acceptButtonText}>Edit Proposal</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={styles.messageButton}
+                  onPress={() => router.push({ pathname: "/(protected)/(tabs)/(messages)/[id]", params: { id: '1' } })}
+                >
+                  <Ionicons name="chatbubble" size={24} color={COLORS.accentTertiary} />
+                </TouchableOpacity>
+              </View>
+              
+              <TouchableOpacity style={styles.declineButton}>
+                <Ionicons name="trash" size={20} color={COLORS.textSecondary} />
+                <Text style={styles.declineButtonText}>Withdraw Proposal</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       )}
     </SafeAreaView>

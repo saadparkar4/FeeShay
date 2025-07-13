@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, ScrollView, SafeAreaView, Platform } from 'react-native';
 import Constants from 'expo-constants';
 import TopBar from '../../../../components/Home/TopBar';
@@ -9,6 +9,7 @@ import TalentCard from '../../../../components/Home/TalentCard';
 import JobCard from '../../../../components/Home/JobCard';
 import Fab from '../../../../components/Home/Fab';
 import { COLORS } from '../../../../constants/Colors';
+import AuthContext from '@/context/AuthContext';
 
 // ============================================================================
 // DYNAMIC CATEGORY GENERATION
@@ -190,18 +191,20 @@ export default function HomeScreen() {
   // ============================================================================
   // STATE MANAGEMENT
   // ============================================================================
+  const { userRole } = useContext(AuthContext);
+  
   // UI state variables for managing user interactions and data filtering
   const [selectedCategory, setSelectedCategory] = useState('All Categories');  // Currently selected category filter
-  const [tab, setTab] = useState<'talents' | 'jobs'>('talents');               // Current tab (talents or jobs)
+  const [tab, setTab] = useState<'talents' | 'jobs'>(userRole === 'client' ? 'talents' : 'jobs'); // Set initial tab based on role
   const [search, setSearch] = useState('');                                    // Search query text
 
   // ============================================================================
   // DYNAMIC CATEGORY GENERATION
   // ============================================================================
-  // Generate categories with item counts based on current tab data
+  // Generate categories with item counts based on user role
   // This shows users how many items are in each category
   const getCategoriesWithCounts = () => {
-    const currentData = tab === 'talents' ? talents : jobs;
+    const currentData = userRole === 'client' ? talents : jobs;
     const dynamicCategories = getDynamicCategories(currentData);
     const categoryCounts = currentData.reduce((acc, item) => {
       acc[item.category] = (acc[item.category] || 0) + 1;
@@ -286,6 +289,18 @@ export default function HomeScreen() {
         
         {/* Main scrollable content area */}
         <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+          {/* Role-based header */}
+          <View style={styles.roleHeader}>
+            <Text style={styles.roleHeaderTitle}>
+              {userRole === 'client' ? 'Looking to Hire' : 'Looking for Jobs'}
+            </Text>
+            <Text style={styles.roleHeaderSubtitle}>
+              {userRole === 'client' 
+                ? 'Find the perfect talent for your project'
+                : 'Discover opportunities that match your skills'}
+            </Text>
+          </View>
+          
           {/* Search bar for filtering content */}
           <SearchBar value={search} onChange={setSearch} />
           
@@ -297,28 +312,30 @@ export default function HomeScreen() {
             displayNames={categoriesWithCounts.map(cat => `${cat.name} (${cat.count})`)}
           />
           
-          {/* Tab switcher between Talents and Jobs */}
-          <ToggleBar tab={tab} setTab={handleTabChange} />
+          {/* No tab switcher - clients only see talents, freelancers only see jobs */}
           
-          {/* Content Section: Display filtered talents or jobs */}
+          {/* Content Section: Display based on user role */}
           <View style={styles.cardsSection}>
-            {tab === 'talents'
-              ? filteredTalents.map((talent, index) => {
-                  // Alternate border colors like in the design
-                  const borderColors = [COLORS.accent, COLORS.accentTertiary, COLORS.accentSecondary, COLORS.accent];
-                  const borderColor = borderColors[index % borderColors.length];
-                  return <TalentCard key={talent.id} talent={talent} borderColor={borderColor} />
-                })
-              : filteredJobs.map((job) => <JobCard key={job.id} job={job} />)
-            }
+            {userRole === 'client' ? (
+              // Client sees talents (Looking to Hire)
+              filteredTalents.map((talent, index) => {
+                // Alternate border colors like in the design
+                const borderColors = [COLORS.accent, COLORS.accentTertiary, COLORS.accentSecondary, COLORS.accent];
+                const borderColor = borderColors[index % borderColors.length];
+                return <TalentCard key={talent.id} talent={talent} borderColor={borderColor} />
+              })
+            ) : (
+              // Freelancer sees jobs (Looking for Jobs)
+              filteredJobs.map((job) => <JobCard key={job.id} job={job} />)
+            )}
             
             {/* No results message when filters return empty */}
-            {tab === 'talents' && filteredTalents.length === 0 && (
+            {userRole === 'client' && filteredTalents.length === 0 && (
               <View style={styles.noResultsContainer}>
                 <Text style={styles.noResultsText}>No talents found matching your criteria</Text>
               </View>
             )}
-            {tab === 'jobs' && filteredJobs.length === 0 && (
+            {userRole === 'freelancer' && filteredJobs.length === 0 && (
               <View style={styles.noResultsContainer}>
                 <Text style={styles.noResultsText}>No jobs found matching your criteria</Text>
               </View>
@@ -369,5 +386,22 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     textAlign: 'center',
     fontWeight: '500',
+  },
+  
+  // Role-based header styles
+  roleHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  roleHeaderTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+    marginBottom: 4,
+  },
+  roleHeaderSubtitle: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
   },
 });

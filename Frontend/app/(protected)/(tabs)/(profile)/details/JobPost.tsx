@@ -272,17 +272,7 @@ export default function JobPostScreen() {
           <Text style={styles.headerTitle}>My Job Posts</Text>
         </View>
         
-        {/* Add new job post button in header */}
-        <TouchableOpacity>
-          <LinearGradient
-            colors={[COLORS.accent, COLORS.accentSecondary]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.addButton}
-          >
-            <Ionicons name="add" size={18} color="white" />
-          </LinearGradient>
-        </TouchableOpacity>
+        
       </View>
 
       {/* Scrollable content area */}

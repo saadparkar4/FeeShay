@@ -8,23 +8,62 @@
 // TODO: Connect notification count to backend API
 // ============================================================================
 
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useContext, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../constants/Colors';
+import AuthContext from '@/context/AuthContext';
+import ConfirmationModal from '../Common/ConfirmationModal';
 
 export default function TopBar() {
+  const { userRole, setUserRole } = useContext(AuthContext);
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  
+  const handleRoleSwitch = () => {
+    const newRole = userRole === 'freelancer' ? 'client' : 'freelancer';
+    setUserRole(newRole);
+    setShowRoleModal(false);
+  };
   return (
     <View style={styles.header}>
       {/* App logo/brand name */}
-      <Text style={styles.logo}>FeeShay</Text>
+      {/* <Text style={styles.logo}>FeeShay</Text> */}
+      <Image source={require('../../assets/images/FeeShay.png')} style={styles.logo} />
+
       
-      {/* Notification bell with badge */}
-      <TouchableOpacity style={styles.bellBtn}>
-        <Ionicons name="notifications-outline" size={26} color={COLORS.textPrimary} />
-        {/* Notification count badge - TODO: Get from backend */}
-        <View style={styles.badge}><Text style={styles.badgeText}>3</Text></View>
-      </TouchableOpacity>
+      <View style={styles.rightSection}>
+        {/* Role switch button */}
+        <TouchableOpacity 
+          style={styles.roleSwitchBtn}
+          onPress={() => setShowRoleModal(true)}
+        >
+          <Ionicons 
+            name={userRole === 'freelancer' ? 'briefcase-outline' : 'person-outline'} 
+            size={24} 
+            color={COLORS.textPrimary} 
+          />
+        </TouchableOpacity>
+        
+        {/* Notification bell with badge */}
+        <TouchableOpacity style={styles.bellBtn}>
+          <Ionicons name="notifications-outline" size={26} color={COLORS.textPrimary} />
+          {/* Notification count badge - TODO: Get from backend */}
+          <View style={styles.badge}><Text style={styles.badgeText}>3</Text></View>
+        </TouchableOpacity>
+      </View>
+      
+      {/* Role Switch Confirmation Modal */}
+      <ConfirmationModal
+        visible={showRoleModal}
+        onClose={() => setShowRoleModal(false)}
+        onConfirm={handleRoleSwitch}
+        title="Switch Role"
+        message={`Are you sure you want to switch to ${userRole === 'freelancer' ? 'Client' : 'Freelancer'} mode?`}
+        icon="swap-horizontal"
+        iconColors={[COLORS.accentTertiary, COLORS.accentSecondary]}
+        confirmText={`Switch to ${userRole === 'freelancer' ? 'Client' : 'Freelancer'}`}
+        cancelText="Cancel"
+      />
     </View>
   );
 }
@@ -46,12 +85,17 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   
-  // App logo styling
-  logo: {
-    color: COLORS.accent,
-    fontWeight: 'bold',
-    fontSize: 24,
-    letterSpacing: 0.5,
+
+  // Right section containing role switch and notifications
+  rightSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  
+  // Role switch button
+  roleSwitchBtn: {
+    padding: 6,
   },
   
   // Notification bell button
@@ -78,5 +122,13 @@ const styles = StyleSheet.create({
     color: COLORS.background,
     fontSize: 10,
     fontWeight: 'bold',
+  },
+  logo: {
+    width: 80,
+    height: 40,
+    // borderRadius: 24,
+    // borderWidth: 4,
+   objectFit: 'contain',
+  //  mixBlendMode: 'screen',
   },
 }); 
