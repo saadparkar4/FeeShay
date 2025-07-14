@@ -4,13 +4,13 @@ import React, { useContext } from "react";
 import { StyleSheet } from "react-native";
 
 const ProtectedLayout = () => {
-  const { isAuthenticated } = useContext(AuthContext);
-  if (!isAuthenticated) return <Redirect href={"/Welcome"} />;
-  return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-    </Stack>
-  );
+	const { isAuthenticated } = useContext(AuthContext);
+	if (!isAuthenticated) return <Redirect href={"/Welcome"} />;
+	return (
+		<Stack>
+			<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+		</Stack>
+	);
 };
 
 export default ProtectedLayout;
