@@ -12,6 +12,7 @@
 
 import React from 'react';
 import { ScrollView, TouchableOpacity, Text, View, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../../constants/Colors';
 
 // Props interface for CategoryScroll component
@@ -49,29 +50,39 @@ export default function CategoryScroll({ categories, selected, onSelect, display
         return (
           <TouchableOpacity
             key={category}
-            style={[
-              styles.categoryBtn,
-              isActive && styles.categoryBtnActive
-            ]}
             onPress={() => onSelect(category)}
+            style={styles.categoryTouchable}
           >
-            <Text style={[
-              styles.categoryText,
-              isActive && styles.categoryTextActive
-            ]}>
-              {name}
-            </Text>
-            {count && (
-              <View style={[
-                styles.countBadge,
-                isActive && styles.countBadgeActive
-              ]}>
-                <Text style={[
-                  styles.countText,
-                  isActive && styles.countTextActive
-                ]}>
-                  {count}
+            {isActive ? (
+              <LinearGradient
+                colors={[COLORS.accent, COLORS.accentSecondary]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.categoryBtn}
+              >
+                <Text style={styles.categoryTextActive}>
+                  {name}
                 </Text>
+                {count && (
+                  <View style={styles.countBadgeActive}>
+                    <Text style={styles.countTextActive}>
+                      {count}
+                    </Text>
+                  </View>
+                )}
+              </LinearGradient>
+            ) : (
+              <View style={styles.categoryBtn}>
+                <Text style={styles.categoryText}>
+                  {name}
+                </Text>
+                {count && (
+                  <View style={styles.countBadge}>
+                    <Text style={styles.countText}>
+                      {count}
+                    </Text>
+                  </View>
+                )}
               </View>
             )}
           </TouchableOpacity>
@@ -96,6 +107,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   
+  // Touchable wrapper
+  categoryTouchable: {
+    borderRadius: 999,
+  },
+  
   // Individual category button
   categoryBtn: {
     backgroundColor: COLORS.background,
@@ -107,12 +123,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  
-  // Active category button styling
-  categoryBtnActive: {
-    backgroundColor: COLORS.accent,
-    borderColor: COLORS.accent,
   },
   
   // Category text styling
@@ -132,8 +142,7 @@ const styles = StyleSheet.create({
   countBadge: {
     backgroundColor: COLORS.muted,
     borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    height: 16,
     minWidth: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -142,6 +151,11 @@ const styles = StyleSheet.create({
   // Active count badge styling
   countBadgeActive: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 999,
+    height: 16,
+    minWidth: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   
   // Count text styling

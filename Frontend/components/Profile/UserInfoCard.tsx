@@ -1,14 +1,22 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '@/constants/Colors';
+import AuthContext from '@/context/AuthContext';
 
 interface UserInfoCardProps {
   onSwitchRole?: () => void;
 }
 
 export default function UserInfoCard({ onSwitchRole }: UserInfoCardProps) {
+  const { userRole, setUserRole } = useContext(AuthContext);
+  
+  const handleSwitchRole = () => {
+    const newRole = userRole === 'freelancer' ? 'client' : 'freelancer';
+    setUserRole(newRole);
+    onSwitchRole?.();
+  };
   return (
     <View style={styles.userCard}>
       <View style={styles.avatarContainer}>
@@ -27,24 +35,29 @@ export default function UserInfoCard({ onSwitchRole }: UserInfoCardProps) {
       </View>
       
       <Text style={styles.userName}>Sarah Johnson</Text>
-      <View style={styles.verifiedBadge}>
-        <Ionicons name="checkmark-circle" size={16} color="white" />
-      </View>
+      
       
       <LinearGradient
-        colors={[COLORS.accentSecondary, COLORS.accent]}
+        colors={userRole === 'freelancer' 
+          ? [COLORS.accentSecondary, COLORS.accent]
+          : [COLORS.accentTertiary, COLORS.accent]
+        }
         style={styles.roleTag}
       >
-        <Text style={styles.roleText}>✨ Freelancer</Text>
+        <Text style={styles.roleText}>
+          {userRole === 'freelancer' ? '✨ Freelancer' : '💼 Client'}
+        </Text>
       </LinearGradient>
       
-      <TouchableOpacity style={styles.switchButton} onPress={onSwitchRole}>
+      <TouchableOpacity style={styles.switchButton} onPress={handleSwitchRole}>
         <LinearGradient
           colors={[COLORS.accentTertiary, COLORS.accentSecondary]}
           style={styles.switchGradient}
         >
           <Ionicons name="repeat" size={16} color="white" />
-          <Text style={styles.switchText}>Switch to Client</Text>
+          <Text style={styles.switchText}>
+            Switch to {userRole === 'freelancer' ? 'Client' : 'Freelancer'}
+          </Text>
         </LinearGradient>
       </TouchableOpacity>
     </View>

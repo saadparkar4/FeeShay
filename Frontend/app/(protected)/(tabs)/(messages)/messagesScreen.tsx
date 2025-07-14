@@ -8,19 +8,9 @@ import { router } from "expo-router";
 export default function Index() {
 	const [allMessages, setAllMessages] = useState(messages);
 
+	// Static button - no functionality
 	const addNewChat = () => {
-		const newMessage = {
-			id: (allMessages.length + 1).toString(),
-			user: {
-				name: "New Contact",
-				avatar: undefined,
-				isOnline: true,
-			},
-			message: "Start a new conversation...",
-			time: "Now",
-			isUnread: false,
-		};
-		setAllMessages([newMessage, ...allMessages]);
+		// Static implementation - does nothing
 	};
 
 	return (
@@ -40,7 +30,7 @@ export default function Index() {
 					<TouchableOpacity
 						key={message.id}
 						onPress={() => {
-							router.push({ pathname: "/messages/[id]", params: { id: message.id } });
+							router.push({ pathname: "/(protected)/(tabs)/(messages)/[id]", params: { id: message.id } });
 						}}>
 						<MessageListItem message={message} />
 					</TouchableOpacity>

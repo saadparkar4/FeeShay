@@ -18,9 +18,15 @@ import { COLORS } from '../../constants/Colors';
 interface ToggleBarProps {
   tab: 'talents' | 'jobs';                           // Current active tab
   setTab: (tab: 'talents' | 'jobs') => void;        // Function to switch tabs
+  labels?: {                                         // Optional custom labels
+    talents: string;
+    jobs: string;
+  };
 }
 
-export default function ToggleBar({ tab, setTab }: ToggleBarProps) {
+export default function ToggleBar({ tab, setTab, labels }: ToggleBarProps) {
+  const talentsLabel = labels?.talents || 'Talents';
+  const jobsLabel = labels?.jobs || 'Jobs';
   return (
     <View style={styles.toggleSection}>
       <View style={styles.toggleContainer}>
@@ -36,7 +42,7 @@ export default function ToggleBar({ tab, setTab }: ToggleBarProps) {
             styles.toggleText,
             tab === 'talents' && styles.toggleTextActive
           ]}>
-            Talents
+            {talentsLabel}
           </Text>
         </TouchableOpacity>
         
@@ -52,7 +58,7 @@ export default function ToggleBar({ tab, setTab }: ToggleBarProps) {
             styles.toggleText,
             tab === 'jobs' && styles.toggleTextActive
           ]}>
-            Jobs
+            {jobsLabel}
           </Text>
         </TouchableOpacity>
       </View>
