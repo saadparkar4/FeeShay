@@ -6,6 +6,7 @@ import proposalRoutes from "./proposals";
 import messageRoutes from "./messages";
 import reviewRoutes from "./reviews";
 import talentRoutes from "./talentRoutes";
+import userRoutes from "./users";
 
 const router = Router();
 
@@ -14,6 +15,7 @@ const API_PREFIX = "/api/v1";
 
 // Mount routes
 router.use(`${API_PREFIX}/auth`, authRoutes);
+router.use(`${API_PREFIX}/users`, userRoutes);
 router.use(`${API_PREFIX}/talents`, talentRoutes);
 router.use(`${API_PREFIX}/jobs`, jobRoutes);
 router.use(`${API_PREFIX}/services`, serviceRoutes);

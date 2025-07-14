@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
-import { Chat, Message, User, FreelancerProfile, ClientProfile } from "../models";
+import { Chat, Message, User, FreelancerProfile, ClientProfile, Notification } from "../models";
 import { createError, asyncHandler } from "../middlewares/errorHandler";
+import socketService from "../services/socketService";
 
 interface AuthRequest extends Request {
     user?: any;
@@ -74,6 +75,18 @@ export const getMyChats = asyncHandler(async (req: AuthRequest, res: Response): 
                 profile = await ClientProfile.findOne({ user: otherUserId });
             }
 
+            // Get last message
+            const lastMessage = await Message.findOne({ chat: chat._id })
+                .sort({ sent_at: -1 })
+                .limit(1);
+
+            // Get unread count
+            const unreadCount = await Message.countDocuments({
+                chat: chat._id,
+                sender: { $ne: userId },
+                read_at: null,
+            });
+
             return {
                 ...chat.toObject(),
                 otherUser: {
@@ -82,6 +95,8 @@ export const getMyChats = asyncHandler(async (req: AuthRequest, res: Response): 
                     role: otherUser?.role,
                     profile,
                 },
+                lastMessage,
+                unreadCount,
             };
         })
     );
@@ -169,6 +184,37 @@ export const sendMessage = asyncHandler(async (req: AuthRequest, res: Response):
 
     // Populate sender info
     await message.populate("sender", "email");
+
+    // Emit real-time update via Socket.io
+    socketService.emitToChat(chatId, "new_message", {
+        message: message.toObject(),
+        chatId,
+    });
+
+    // Send notification to the other user
+    const otherUserId = chat.user1.toString() === userId.toString() ? chat.user2.toString() : chat.user1.toString();
+    
+    // Create notification
+    const notification = await Notification.create({
+        user: otherUserId,
+        type: "message",
+        content: `New message from ${(message.sender as any).email}`,
+        is_read: false,
+        created_at: new Date(),
+    });
+
+    // Get unread count for the other user
+    const unreadCount = await Message.countDocuments({
+        chat: { $in: await Chat.find({ $or: [{ user1: otherUserId }, { user2: otherUserId }] }).distinct("_id") },
+        sender: { $ne: otherUserId },
+        read_at: null,
+    });
+
+    // Send real-time notification
+    socketService.emitToUser(otherUserId, "new_notification", {
+        notification: notification.toObject(),
+        unreadCount,
+    });
 
     res.status(201).json({
         success: true,
