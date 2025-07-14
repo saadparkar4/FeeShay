@@ -8,22 +8,71 @@
 // TODO: Connect notification count to backend API
 // ============================================================================
 
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/Colors";
 import AuthContext from "@/context/AuthContext";
 import ConfirmationModal from "../Common/ConfirmationModal";
 import LogoImage from "./Logo";
+import { getUnreadCount } from "@/api/messages";
+import socketService from "@/services/socketService";
+import { router } from "expo-router";
 
 export default function TopBar() {
-	const { userRole, setUserRole } = useContext(AuthContext);
+	const { userRole, setUserRole, isAuthenticated } = useContext(AuthContext);
 	const [showRoleModal, setShowRoleModal] = useState(false);
+	const [unreadCount, setUnreadCount] = useState(0);
+
+	// Fetch unread count on mount
+	useEffect(() => {
+		if (isAuthenticated) {
+			fetchUnreadCount();
+		}
+	}, [isAuthenticated]);
+
+	// Set up socket listeners for real-time updates
+	useEffect(() => {
+		const handleNewNotification = (data: any) => {
+			if (data.unreadCount !== undefined) {
+				setUnreadCount(data.unreadCount);
+			}
+		};
+
+		const handleUnreadUpdate = (data: any) => {
+			if (data.unreadCount !== undefined) {
+				setUnreadCount(data.unreadCount);
+			}
+		};
+
+		socketService.on('new_notification', handleNewNotification);
+		socketService.on('unread_count_update', handleUnreadUpdate);
+
+		return () => {
+			socketService.off('new_notification', handleNewNotification);
+			socketService.off('unread_count_update', handleUnreadUpdate);
+		};
+	}, []);
+
+	const fetchUnreadCount = async () => {
+		try {
+			const response = await getUnreadCount();
+			if (response.success && response.data) {
+				setUnreadCount(response.data.unreadCount);
+			}
+		} catch (error) {
+			console.error("Error fetching unread count:", error);
+		}
+	};
 
 	const handleRoleSwitch = () => {
 		const newRole = userRole === "freelancer" ? "client" : "freelancer";
 		setUserRole(newRole);
 		setShowRoleModal(false);
+	};
+
+	const handleNotificationPress = () => {
+		router.push("/(protected)/(tabs)/(messages)/messagesScreen");
 	};
 	return (
 		<View style={styles.header}>
@@ -38,12 +87,14 @@ export default function TopBar() {
 				</TouchableOpacity>
 
 				{/* Notification bell with badge */}
-				<TouchableOpacity style={styles.bellBtn}>
+				<TouchableOpacity style={styles.bellBtn} onPress={handleNotificationPress}>
 					<Ionicons name="notifications-outline" size={26} color={COLORS.textPrimary} />
-					{/* Notification count badge - TODO: Get from backend */}
-					<View style={styles.badge}>
-						<Text style={styles.badgeText}>3</Text>
-					</View>
+					{/* Notification count badge */}
+					{unreadCount > 0 && (
+						<View style={styles.badge}>
+							<Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+						</View>
+					)}
 				</TouchableOpacity>
 			</View>
 
@@ -104,11 +155,12 @@ const styles = StyleSheet.create({
 		top: 2,
 		right: 2,
 		backgroundColor: COLORS.accent,
-		width: 16,
-		height: 16,
-		borderRadius: 8,
+		minWidth: 18,
+		height: 18,
+		borderRadius: 9,
 		alignItems: "center",
 		justifyContent: "center",
+		paddingHorizontal: 4,
 	},
 
 	// Badge text styling

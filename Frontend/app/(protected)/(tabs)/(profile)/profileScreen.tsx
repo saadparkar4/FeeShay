@@ -18,6 +18,8 @@ import {
   ScrollView,
   StyleSheet,
   SafeAreaView,
+  Text,
+  TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { deleteToken } from '@/api/storage';
@@ -29,10 +31,11 @@ import ProfileDetails from '@/components/Profile/ProfileDetails';
 import PortfolioSection from '@/components/Profile/PortfolioSection';
 import ReviewsSection from '@/components/Profile/ReviewsSection';
 import SettingsSection from '@/components/Profile/SettingsSection';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function ProfileScreen() {
   // Authentication context for managing login state
-  const { setIsAuthenticated } = useContext(AuthContext);
+  const { setIsAuthenticated, isAuthenticated } = useContext(AuthContext);
   
   // Router for navigation between screens
   const router = useRouter();
@@ -64,6 +67,33 @@ export default function ProfileScreen() {
     /* TODO: Implement role switching logic
        This would update user's active role in the app */
   };
+
+  // Handle sign in navigation for guests
+  const handleSignIn = () => {
+    router.push('/Register');
+  };
+
+  // If user is not authenticated, show sign in prompt
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: 'white' }]}>
+        <View style={styles.guestContainer}>
+          <Text style={styles.guestTitle}>Profile</Text>
+          <Text style={styles.guestMessage}>Please sign in to use this feature</Text>
+          <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
+            <LinearGradient
+              colors={[COLORS.accent, COLORS.accentSecondary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.gradientButton}
+            >
+              <Text style={styles.signInButtonText}>Sign In</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: 'white' }]}>
@@ -105,5 +135,45 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,  // Uses app theme background color
+  },
+  // Guest container - centered content for non-authenticated users
+  guestContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  // Guest title
+  guestTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+    marginBottom: 16,
+  },
+  // Guest message
+  guestMessage: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginBottom: 32,
+  },
+  // Sign in button
+  signInButton: {
+    width: 200,
+    height: 48,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  // Gradient button style
+  gradientButton: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  // Sign in button text
+  signInButtonText: {
+    color: COLORS.background,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

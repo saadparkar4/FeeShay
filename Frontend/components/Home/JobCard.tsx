@@ -9,12 +9,13 @@
 // - Color-coded category badge
 // ============================================================================
 
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { COLORS, getCategoryColors } from '../../constants/Colors';
+import AuthContext from '@/context/AuthContext';
 
 // Note: Category colors are now managed centrally in Colors.ts
 
@@ -38,14 +39,20 @@ interface JobCardProps {
 export default function JobCard({ job }: JobCardProps) {
   // Get router for navigation to job details
   const router = useRouter();
+  const { isAuthenticated } = useContext(AuthContext);
   
   // Get category-specific colors for the badge
   const categoryColors = getCategoryColors(job.category);
 
   // Handle navigation to job details screen when card is tapped
   const handlePress = () => {
-    // Navigate to job details screen with job ID as parameter
-    router.push(`/(protected)/(tabs)/(home)/job/${job.id}`);
+    if (!isAuthenticated) {
+      // Redirect to signup if not authenticated
+      router.push('/Register');
+    } else {
+      // Navigate to job details screen with job ID as parameter
+      router.push(`/(protected)/(tabs)/(home)/job/${job.id}`);
+    }
   };
 
   return (

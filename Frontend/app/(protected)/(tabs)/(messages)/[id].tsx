@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -9,86 +9,228 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/Colors';
+import { getChatMessages, sendMessage, markMessagesAsRead, getMyChats } from '@/api/messages';
+import socketService from '@/services/socketService';
+import AuthContext from '@/context/AuthContext';
 
 interface Message {
-  id: string;
-  text: string;
-  sender: 'user' | 'other';
-  timestamp: string;
+  _id: string;
+  content: string;
+  sender: {
+    _id: string;
+    email: string;
+  };
+  sent_at: string;
+  read_at?: string;
+}
+
+interface ChatInfo {
+  otherUser: {
+    id: string;
+    email: string;
+    profile?: {
+      name: string;
+    };
+  };
 }
 
 export default function ChatScreen() {
-  const { id } = useLocalSearchParams();
+  const { id: chatId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const scrollViewRef = useRef<ScrollView>(null);
   const [inputText, setInputText] = useState('');
-  
-  // Dummy messages
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: 'Hello! I saw your proposal for the website redesign project.',
-      sender: 'other',
-      timestamp: '10:30 AM',
-    },
-    {
-      id: '2',
-      text: 'Yes, I\'m very interested in working on your project!',
-      sender: 'user',
-      timestamp: '10:32 AM',
-    },
-    {
-      id: '3',
-      text: 'Great! Can you tell me more about your experience with e-commerce sites?',
-      sender: 'other',
-      timestamp: '10:35 AM',
-    },
-    {
-      id: '4',
-      text: 'I have built several e-commerce platforms using React and Node.js. I can share my portfolio if you\'d like.',
-      sender: 'user',
-      timestamp: '10:38 AM',
-    },
-    {
-      id: '5',
-      text: 'That would be perfect. Also, what\'s your estimated timeline?',
-      sender: 'other',
-      timestamp: '10:40 AM',
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [chatInfo, setChatInfo] = useState<ChatInfo | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Fetch chat info
+  const fetchChatInfo = async () => {
+    try {
+      const response = await getMyChats();
+      if (response.success && response.data) {
+        const chat = response.data.chats.find((c: any) => c._id === chatId);
+        if (chat) {
+          setChatInfo({ otherUser: chat.otherUser });
+          // Determine current user ID from chat data
+          if (chat.user1._id !== chat.otherUser.id) {
+            setCurrentUserId(chat.user1._id);
+          } else {
+            setCurrentUserId(chat.user2._id);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching chat info:', error);
+    }
+  };
+
+  // Fetch messages
+  const fetchMessages = async () => {
+    try {
+      const response = await getChatMessages(chatId as string);
+      if (response.success && response.data) {
+        setMessages(response.data.messages);
+        // Mark messages as read
+        markMessagesAsRead(chatId as string);
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      Alert.alert('Error', 'Failed to load messages');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initialize
+  useEffect(() => {
+    if (chatId) {
+      fetchChatInfo();
+      fetchMessages();
+      socketService.joinChat(chatId as string);
+    }
+
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, [chatId]);
+
+  // Socket event listeners
+  useEffect(() => {
+    const handleNewMessage = (data: any) => {
+      if (data.chatId === chatId) {
+        setMessages((prev) => [...prev, data.message]);
+        // Mark as read if the chat is open
+        if (data.message.sender._id !== currentUserId) {
+          markMessagesAsRead(chatId as string);
+        }
+      }
+    };
+
+    const handleUserTyping = (data: any) => {
+      if (data.chatId === chatId && data.userId !== currentUserId) {
+        setIsTyping(true);
+      }
+    };
+
+    const handleUserStoppedTyping = (data: any) => {
+      if (data.chatId === chatId && data.userId !== currentUserId) {
+        setIsTyping(false);
+      }
+    };
+
+    socketService.on('new_message', handleNewMessage);
+    socketService.on('user_typing', handleUserTyping);
+    socketService.on('user_stopped_typing', handleUserStoppedTyping);
+
+    return () => {
+      socketService.off('new_message', handleNewMessage);
+      socketService.off('user_typing', handleUserTyping);
+      socketService.off('user_stopped_typing', handleUserStoppedTyping);
+    };
+  }, [chatId, currentUserId]);
 
   // Auto-scroll to bottom when new messages are added
   useEffect(() => {
-    scrollViewRef.current?.scrollToEnd({ animated: true });
+    if (messages.length > 0) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
   }, [messages]);
 
-  const sendMessage = () => {
-    if (inputText.trim()) {
-      const newMessage: Message = {
-        id: Date.now().toString(),
-        text: inputText.trim(),
-        sender: 'user',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-      setMessages([...messages, newMessage]);
-      setInputText('');
-      
-      // Simulate a response after 1 second
-      setTimeout(() => {
-        const response: Message = {
-          id: (Date.now() + 1).toString(),
-          text: 'Thanks for your message! This is a dummy response.',
-          sender: 'other',
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        };
-        setMessages(prev => [...prev, response]);
+  // Handle typing indicator
+  const handleInputChange = (text: string) => {
+    setInputText(text);
+
+    // Send typing indicator
+    if (text.length > 0 && !isTyping) {
+      socketService.startTyping(chatId as string);
+    }
+
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set new timeout to stop typing
+    if (text.length > 0) {
+      typingTimeoutRef.current = setTimeout(() => {
+        socketService.stopTyping(chatId as string);
       }, 1000);
+    } else {
+      socketService.stopTyping(chatId as string);
     }
   };
+
+  // Send message
+  const handleSendMessage = async () => {
+    if (inputText.trim() && !sending) {
+      setSending(true);
+      const messageText = inputText.trim();
+      setInputText('');
+
+      // Stop typing indicator
+      socketService.stopTyping(chatId as string);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+
+      try {
+        // Use Socket.io to send the message for real-time delivery
+        socketService.sendMessage(chatId as string, messageText);
+        
+        // Also send via API for persistence (the socket handler will prevent duplicate)
+        await sendMessage(chatId as string, messageText);
+      } catch (error) {
+        console.error('Error sending message:', error);
+        Alert.alert('Error', 'Failed to send message');
+        setInputText(messageText); // Restore message if failed
+      } finally {
+        setSending(false);
+      }
+    }
+  };
+
+  // Format timestamp
+  const formatTimestamp = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else if (diffDays === 1) {
+      return 'Yesterday ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else {
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + 
+             date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+  };
+
+  const otherUserName = chatInfo?.otherUser?.profile?.name || chatInfo?.otherUser?.email || 'User';
+  const isOnline = socketService.isUserOnline(chatInfo?.otherUser?.id || '');
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.accent} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -102,8 +244,10 @@ export default function ChatScreen() {
         </TouchableOpacity>
         
         <View style={styles.headerInfo}>
-          <Text style={styles.headerName}>John Smith</Text>
-          <Text style={styles.headerStatus}>Online</Text>
+          <Text style={styles.headerName}>{otherUserName}</Text>
+          <Text style={[styles.headerStatus, { color: isOnline ? COLORS.accent : COLORS.textSecondary }]}>
+            {isTyping ? 'Typing...' : (isOnline ? 'Online' : 'Offline')}
+          </Text>
         </View>
         
         <TouchableOpacity style={styles.moreButton}>
@@ -123,39 +267,50 @@ export default function ChatScreen() {
           contentContainerStyle={styles.messagesContent}
           showsVerticalScrollIndicator={false}
         >
-          {messages.map((message) => (
-            <View
-              key={message.id}
-              style={[
-                styles.messageWrapper,
-                message.sender === 'user' ? styles.userMessageWrapper : styles.otherMessageWrapper,
-              ]}
-            >
-              <View
-                style={[
-                  styles.messageBubble,
-                  message.sender === 'user' ? styles.userMessage : styles.otherMessage,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.messageText,
-                    message.sender === 'user' ? styles.userMessageText : styles.otherMessageText,
-                  ]}
-                >
-                  {message.text}
-                </Text>
-                <Text
-                  style={[
-                    styles.timestamp,
-                    message.sender === 'user' ? styles.userTimestamp : styles.otherTimestamp,
-                  ]}
-                >
-                  {message.timestamp}
-                </Text>
-              </View>
+          {messages.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Start a conversation</Text>
+              <Text style={styles.emptySubtext}>Send a message to begin chatting</Text>
             </View>
-          ))}
+          ) : (
+            messages.map((message) => {
+              const isUserMessage = message.sender._id === currentUserId;
+              return (
+                <View
+                  key={message._id}
+                  style={[
+                    styles.messageWrapper,
+                    isUserMessage ? styles.userMessageWrapper : styles.otherMessageWrapper,
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.messageBubble,
+                      isUserMessage ? styles.userMessage : styles.otherMessage,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.messageText,
+                        isUserMessage ? styles.userMessageText : styles.otherMessageText,
+                      ]}
+                    >
+                      {message.content}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.timestamp,
+                        isUserMessage ? styles.userTimestamp : styles.otherTimestamp,
+                      ]}
+                    >
+                      {formatTimestamp(message.sent_at)}
+                      {isUserMessage && message.read_at && ' • Read'}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })
+          )}
         </ScrollView>
 
         {/* Input */}
@@ -163,25 +318,30 @@ export default function ChatScreen() {
           <TextInput
             style={styles.input}
             value={inputText}
-            onChangeText={setInputText}
+            onChangeText={handleInputChange}
             placeholder="Type a message..."
             placeholderTextColor={COLORS.textSecondary}
             multiline
             maxLength={500}
+            editable={!sending}
           />
           <TouchableOpacity
             style={[
               styles.sendButton,
               inputText.trim() ? styles.sendButtonActive : styles.sendButtonInactive,
             ]}
-            onPress={sendMessage}
-            disabled={!inputText.trim()}
+            onPress={handleSendMessage}
+            disabled={!inputText.trim() || sending}
           >
-            <Ionicons
-              name="send"
-              size={20}
-              color={inputText.trim() ? 'white' : COLORS.textSecondary}
-            />
+            {sending ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Ionicons
+                name="send"
+                size={20}
+                color={inputText.trim() ? 'white' : COLORS.textSecondary}
+              />
+            )}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -193,6 +353,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -217,7 +382,6 @@ const styles = StyleSheet.create({
   },
   headerStatus: {
     fontSize: 12,
-    color: COLORS.accent,
     marginTop: 2,
   },
   moreButton: {
@@ -231,6 +395,23 @@ const styles = StyleSheet.create({
   },
   messagesContent: {
     padding: 16,
+    flexGrow: 1,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 100,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginTop: 8,
   },
   messageWrapper: {
     marginBottom: 12,

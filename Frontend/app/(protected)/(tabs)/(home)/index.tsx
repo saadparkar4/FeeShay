@@ -191,7 +191,7 @@ export default function HomeScreen() {
   // ============================================================================
   // STATE MANAGEMENT
   // ============================================================================
-  const { userRole } = useContext(AuthContext);
+  const { userRole, isAuthenticated } = useContext(AuthContext);
   
   // UI state variables for managing user interactions and data filtering
   const [selectedCategory, setSelectedCategory] = useState('All Categories');  // Currently selected category filter
@@ -343,8 +343,8 @@ export default function HomeScreen() {
           </View>
         </ScrollView>
         
-        {/* Floating action button for creating new content */}
-        <Fab />
+        {/* Floating action button for creating new content - only for authenticated users */}
+        {isAuthenticated && <Fab />}
       </View>
     </SafeAreaView>
   );

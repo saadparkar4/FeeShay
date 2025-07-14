@@ -2,8 +2,7 @@ import axios from "axios";
 import { getToken } from "./storage";
 
 const instance = axios.create({
-  // baseURL: "http://localhost:3000",
-  baseURL: "http://localhost:3000",
+  baseURL: process.env.EXPO_PUBLIC_API_URL?.replace('/api/v1', '') || "http://localhost:3000/api/v1",
 });
 
 instance.interceptors.request.use(async (req) => {

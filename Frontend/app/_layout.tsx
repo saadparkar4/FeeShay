@@ -6,11 +6,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import socketService from "@/services/socketService";
 
 export default function RootLayout() {
 	const queryClient = new QueryClient();
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
-	const [userRole, setUserRole] = useState<UserRole>("client"); // Default to client
+	const [userRole, setUserRole] = useState<UserRole>("guest"); // Default to guest
 	const [ready, setReady] = useState(false);
 
 	const checkToken = async () => {
@@ -19,9 +20,12 @@ export default function RootLayout() {
 			setIsAuthenticated(true);
 			// Load saved user role
 			const savedRole = await getUserRole();
-			if (savedRole) {
+			if (savedRole && savedRole !== "guest") {
 				setUserRole(savedRole);
 			}
+		} else {
+			// No token means guest user
+			setUserRole("guest");
 		}
 		setReady(true);
 	};
@@ -36,12 +40,25 @@ export default function RootLayout() {
 		await deleteToken();
 		await deleteUserRole();
 		setIsAuthenticated(false);
-		setUserRole("freelancer"); // Reset to default
+		setUserRole("guest"); // Reset to guest
 	};
 
 	useEffect(() => {
 		checkToken();
 	}, []);
+
+	// Connect/disconnect socket based on auth status
+	useEffect(() => {
+		if (isAuthenticated) {
+			socketService.connect();
+		} else {
+			socketService.disconnect();
+		}
+
+		return () => {
+			socketService.disconnect();
+		};
+	}, [isAuthenticated]);
 
 	if (!ready) {
 		return (

@@ -1,6 +1,6 @@
 import { createContext } from "react";
 
-export type UserRole = "freelancer" | "client";
+export type UserRole = "freelancer" | "client" | "guest";
 
 interface AuthContextType {
 	isAuthenticated: boolean;

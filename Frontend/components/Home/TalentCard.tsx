@@ -14,13 +14,14 @@
 // TODO: Add error handling for broken image URLs
 // ============================================================================
 
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../../constants/Colors';
 import { useRouter } from 'expo-router';
 import ConfirmationModal from '../Common/ConfirmationModal';
+import AuthContext from '@/context/AuthContext';
 
 // Talent data interface
 interface Talent {
@@ -45,6 +46,7 @@ interface TalentCardProps {
 export default function TalentCard({ talent, borderColor }: TalentCardProps) {
   const router = useRouter();
   const [showHireModal, setShowHireModal] = useState(false);
+  const { isAuthenticated } = useContext(AuthContext);
 
   // Determine skill tag colors based on index
   const getSkillColor = (index: number) => {
@@ -56,10 +58,24 @@ export default function TalentCard({ talent, borderColor }: TalentCardProps) {
     return colors[index % colors.length];
   };
 
-  // const handleConfirmHire = () => {
-  //   // Navigate to hire/proposal page
-  //   router.push(`/(protected)/(tabs)/(home)/job/send-proposal?talentId=${talent.id}&talentName=${talent.name}`);
-  // };
+  const handleHireClick = () => {
+    if (!isAuthenticated) {
+      // Redirect to signup if not authenticated
+      router.push('/Register');
+    } else {
+      setShowHireModal(true);
+    }
+  };
+
+  const handleViewProfileClick = () => {
+    if (!isAuthenticated) {
+      // Redirect to signup if not authenticated
+      router.push('/Register');
+    } else {
+      // Navigate to profile page
+      // TODO: Implement profile navigation
+    }
+  };
 
   return (
     <>
@@ -115,7 +131,7 @@ export default function TalentCard({ talent, borderColor }: TalentCardProps) {
             
           {/* Action buttons */}
           <View style={styles.buttonsContainer}>
-            <TouchableOpacity style={styles.hireButton} activeOpacity={0.8} onPress={() => setShowHireModal(true)}>
+            <TouchableOpacity style={styles.hireButton} activeOpacity={0.8} onPress={handleHireClick}>
               <LinearGradient
                 colors={[COLORS.accent, COLORS.accentSecondary]}
                 start={{ x: 0, y: 0 }}
@@ -126,7 +142,7 @@ export default function TalentCard({ talent, borderColor }: TalentCardProps) {
               </LinearGradient>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.profileButton} activeOpacity={0.8}>
+            <TouchableOpacity style={styles.profileButton} activeOpacity={0.8} onPress={handleViewProfileClick}>
               <Text style={styles.profileButtonText}>View Profile</Text>
             </TouchableOpacity>
           </View>

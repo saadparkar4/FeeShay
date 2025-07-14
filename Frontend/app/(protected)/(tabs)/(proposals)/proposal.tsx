@@ -12,7 +12,7 @@
  */
 
 import React, { useState, useMemo, useContext } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { COLORS } from '@/constants/Colors';
@@ -21,6 +21,8 @@ import { TabBar, TabType } from '@/components/Proposals/TabBar';
 import { Pagination } from '@/components/Proposals/Pagination';
 import TopBar from '@/components/Home/TopBar';
 import AuthContext from '@/context/AuthContext';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
 // Mock proposal data for clients - proposals received from freelancers
 const mockReceivedProposals: Proposal[] = [
@@ -133,8 +135,8 @@ export default function ProposalsScreen() {
   // Router for navigation to proposal details
   const router = useRouter();
   
-  // Get user role from auth context
-  const { userRole } = useContext(AuthContext);
+  // Get user role and auth status from auth context
+  const { userRole, isAuthenticated } = useContext(AuthContext);
   
   // State for currently selected tab (Active/Completed/Cancelled)
   const [selectedTab, setSelectedTab] = useState<TabType>('Active');
@@ -188,6 +190,34 @@ export default function ProposalsScreen() {
       }
     });
   };
+
+  // Handle sign in navigation for guests
+  const handleSignIn = () => {
+    router.push('/Register');
+  };
+
+  // If user is not authenticated, show sign in prompt
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.guestContainer}>
+          <Ionicons name="document-text-outline" size={64} color={COLORS.textSecondary} />
+          <Text style={styles.guestTitle}>Proposals</Text>
+          <Text style={styles.guestMessage}>Please sign in to use this feature</Text>
+          <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
+            <LinearGradient
+              colors={[COLORS.accent, COLORS.accentSecondary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.gradientButton}
+            >
+              <Text style={styles.signInButtonText}>Sign In</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -294,5 +324,46 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: COLORS.textSecondary,
+  },
+  // Guest container styles
+  guestContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  // Guest title
+  guestTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  // Guest message
+  guestMessage: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginBottom: 32,
+  },
+  // Sign in button
+  signInButton: {
+    width: 200,
+    height: 48,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  // Gradient button style
+  gradientButton: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  // Sign in button text
+  signInButtonText: {
+    color: COLORS.background,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

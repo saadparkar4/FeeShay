@@ -1,43 +1,109 @@
 import React from "react";
-import { View, Text, Image, StyleSheet, ImageSourcePropType } from "react-native";
-import type { Message } from "../../models/dummyData";
+import { View, Text, Image, StyleSheet } from "react-native";
+import { COLORS } from "@/constants/Colors";
+import socketService from "@/services/socketService";
 
-interface MessageListItemProps {
-	message: Message;
+interface Chat {
+	_id: string;
+	user1: any;
+	user2: any;
+	created_at: string;
+	last_message_at?: string;
+	otherUser?: {
+		id: string;
+		email: string;
+		role: string;
+		profile: {
+			name: string;
+			bio?: string;
+			location?: string;
+			profile_image_url?: string;
+		};
+	};
+	lastMessage?: {
+		content: string;
+		sent_at: string;
+		sender: string;
+		read_at?: string;
+	};
+	unreadCount?: number;
 }
 
-// this function will allow us to get the initials of the user's name
+interface MessageListItemProps {
+	chat: Chat;
+}
+
+// Get initials from name
 function getInitials(name: string): string {
+	if (!name) return "?";
 	return name
 		.split(" ")
 		.map((n) => n[0])
 		.join("")
-		.toUpperCase();
+		.toUpperCase()
+		.slice(0, 2);
 }
 
-export function MessageListItem({ message }: MessageListItemProps) {
+// Format time for display
+function formatTime(dateString: string): string {
+	const date = new Date(dateString);
+	const now = new Date();
+	const diffMs = now.getTime() - date.getTime();
+	const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+	if (diffDays === 0) {
+		// Today - show time
+		return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+	} else if (diffDays === 1) {
+		return "Yesterday";
+	} else if (diffDays < 7) {
+		// This week - show day name
+		return date.toLocaleDateString([], { weekday: 'short' });
+	} else {
+		// Older - show date
+		return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+	}
+}
+
+export function MessageListItem({ chat }: MessageListItemProps) {
+	const otherUser = chat.otherUser;
+	const userName = otherUser?.profile?.name || otherUser?.email || "Unknown User";
+	const userAvatar = otherUser?.profile?.profile_image_url;
+	const isOnline = socketService.isUserOnline(otherUser?.id || "");
+	
+	// Get last message info
+	const lastMessage = chat.lastMessage?.content || "No messages yet";
+	const messageTime = chat.lastMessage?.sent_at || chat.last_message_at || chat.created_at;
+	const hasUnread = (chat.unreadCount || 0) > 0;
+
 	return (
 		<View style={styles.container}>
 			<View style={styles.avatarContainer}>
-				{message.user.avatar ? (
-					<Image source={message.user.avatar as ImageSourcePropType} style={styles.avatar} />
+				{userAvatar ? (
+					<Image source={{ uri: userAvatar }} style={styles.avatar} />
 				) : (
 					<View style={[styles.avatar, styles.placeholderAvatar]}>
-						<Text style={styles.initials}>{getInitials(message.user.name)}</Text>
+						<Text style={styles.initials}>{getInitials(userName)}</Text>
 					</View>
 				)}
-				<View style={[styles.statusDot, { backgroundColor: message.user.isOnline ? "#00E676" : "#D3D3D3" }]} />
+				<View style={[styles.statusDot, { backgroundColor: isOnline ? "#00E676" : "#D3D3D3" }]} />
 			</View>
 			<View style={styles.textContainer}>
 				<View style={styles.headerRow}>
-					<Text style={styles.name}>{message.user.name}</Text>
-					<Text style={styles.time}>{message.time}</Text>
+					<Text style={styles.name} numberOfLines={1}>{userName}</Text>
+					<Text style={styles.time}>{formatTime(messageTime)}</Text>
 				</View>
 				<View style={styles.messageRow}>
-					<Text style={[styles.message, message.isUnread && styles.unreadMessage]} numberOfLines={1}>
-						{message.message}
+					<Text style={[styles.message, hasUnread && styles.unreadMessage]} numberOfLines={1}>
+						{lastMessage}
 					</Text>
-					{message.isUnread && <View style={styles.unreadDot} />}
+					{hasUnread && (
+						<View style={styles.unreadBadge}>
+							<Text style={styles.unreadCount}>
+								{chat.unreadCount! > 99 ? '99+' : chat.unreadCount}
+							</Text>
+						</View>
+					)}
 				</View>
 			</View>
 		</View>
@@ -68,12 +134,12 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 	},
 	placeholderAvatar: {
-		backgroundColor: "#E0E0E0",
+		backgroundColor: COLORS.accent,
 	},
 	initials: {
-		color: "#757B8A",
+		color: COLORS.background,
 		fontWeight: "bold",
-		fontSize: 22,
+		fontSize: 20,
 	},
 	statusDot: {
 		position: "absolute",
@@ -93,37 +159,45 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
-		marginBottom: 2,
+		marginBottom: 4,
 	},
 	name: {
-		fontWeight: "bold",
-		fontSize: 20,
-		color: "#222",
+		fontWeight: "600",
+		fontSize: 16,
+		color: COLORS.textPrimary,
+		flex: 1,
+		marginRight: 8,
 	},
 	time: {
-		fontSize: 15,
-		color: "#757B8A",
-		fontWeight: "500",
+		fontSize: 13,
+		color: COLORS.textSecondary,
 	},
 	messageRow: {
 		flexDirection: "row",
 		alignItems: "center",
+		justifyContent: "space-between",
 	},
 	message: {
-		fontSize: 17,
-		color: "#757B8A",
+		fontSize: 14,
+		color: COLORS.textSecondary,
 		flex: 1,
+		marginRight: 8,
 	},
 	unreadMessage: {
-		color: "#FF2D8B",
+		color: COLORS.textPrimary,
 		fontWeight: "500",
 	},
-	unreadDot: {
-		width: 10,
-		height: 10,
-		borderRadius: 5,
-		backgroundColor: "#FF2D8B",
-		marginLeft: 8,
+	unreadBadge: {
+		backgroundColor: COLORS.accent,
+		borderRadius: 12,
+		paddingHorizontal: 8,
+		paddingVertical: 2,
+		minWidth: 24,
+		alignItems: "center",
+	},
+	unreadCount: {
+		color: COLORS.background,
+		fontSize: 12,
+		fontWeight: "600",
 	},
 });
-//

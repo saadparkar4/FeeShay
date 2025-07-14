@@ -4,8 +4,9 @@ import React, { useContext } from "react";
 import { StyleSheet } from "react-native";
 
 const ProtectedLayout = () => {
-	const { isAuthenticated } = useContext(AuthContext);
-	if (!isAuthenticated) return <Redirect href={"/Welcome"} />;
+	const { isAuthenticated, userRole } = useContext(AuthContext);
+	// Allow guests to view the home page
+	if (!isAuthenticated && userRole !== "guest") return <Redirect href={"/Welcome"} />;
 	return (
 		<Stack>
 			<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
