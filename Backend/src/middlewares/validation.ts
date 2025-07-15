@@ -92,6 +92,12 @@ export const validateReviewCreation = [
 // ID validation
 export const validateMongoId = [param("id").isMongoId().withMessage("Valid ID is required"), handleValidationErrors];
 
+// Chat ID validation
+export const validateChatId = [param("chatId").isMongoId().withMessage("Valid chat ID is required"), handleValidationErrors];
+
+// Message ID validation  
+export const validateMessageId = [param("messageId").isMongoId().withMessage("Valid message ID is required"), handleValidationErrors];
+
 // Pagination validation
 export const validatePagination = [
     query("page").optional().isInt({ min: 1 }).withMessage("Page must be a positive integer"),

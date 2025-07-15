@@ -22,8 +22,9 @@ export default function TabLayout() {
 				}}
 			/>
 			<Tabs.Screen
-				name="(messages)/messagesScreen"
+				name="(messages)"
 				options={{
+					href: "/messagesScreen",
 					title: "Messages",
 				}}
 			/>

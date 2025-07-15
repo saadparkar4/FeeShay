@@ -6,7 +6,9 @@ const massagesLayout = () => {
 	return (
 
 		<Stack screenOptions={{ headerShown: false }}>
-			<Stack.Screen name="Messages" />
+			<Stack.Screen name="messagesScreen" />
+			<Stack.Screen name="[id]" />
+			<Stack.Screen name="newChat" />
 			{/* <Stack.Screen name="details" /> */}
 		</Stack>
 	)
