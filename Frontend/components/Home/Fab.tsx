@@ -1,26 +1,41 @@
 // ============================================================================
 // FLOATING ACTION BUTTON (FAB) COMPONENT
 // ============================================================================
-// Floating action button for creating new content
+// Floating action button for creating new content (Client only)
 // Features:
 // - Fixed position at bottom right
-// - Plus icon for creating new content
+// - Plus icon for creating new job posts
 // - Shadow and elevation for depth
 // - Touch feedback for user interaction
-// TODO: Add navigation to create job/talent profile page
+// - Hidden for freelancer accounts
+// - Navigates to create job screen for clients
 // TODO: Add haptic feedback on press
-// TODO: Add different actions based on current tab (create job vs create profile)
 // ============================================================================
 
-import React from 'react';
+import React, { useContext } from 'react';
 import { TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import { COLORS } from '../../constants/Colors';
+import AuthContext from '../../context/AuthContext';
 
 export default function Fab() {
+  const router = useRouter();
+  const { userRole } = useContext(AuthContext);
+  
+  // Hide FAB for freelancers
+  if (userRole === 'freelancer') {
+    return null;
+  }
+
+  const handlePress = () => {
+    // Navigate to create job screen for clients
+    router.push('/(protected)/(tabs)/(profile)/details/create-job');
+  };
+
   return (
-    <TouchableOpacity style={styles.fabTouchable} onPress={() => alert('Create new content')}>
+    <TouchableOpacity style={styles.fabTouchable} onPress={handlePress}>
       <LinearGradient
         colors={[COLORS.accent, COLORS.accentSecondary]}
         start={{ x: 0, y: 0 }}

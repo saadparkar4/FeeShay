@@ -12,7 +12,7 @@ type UserRole = "freelancer" | "client" | "both";
 
 export default function RegisterScreen() {
 	// Context
-	const { setIsAuthenticated } = useContext(AuthContext);
+	const { setIsAuthenticated, setUserRole } = useContext(AuthContext);
 
 	// State
 	const [fullName, setFullName] = useState("");
@@ -34,8 +34,18 @@ export default function RegisterScreen() {
 				password,
 				role: role as UserRole,
 			}),
-		onSuccess: () => {
+		onSuccess: (response) => {
+			// Extract user role from response
+			const userRole = response.data?.user?.role || response.user?.role;
+			
+			// Set authentication status
 			setIsAuthenticated(true);
+			
+			// Set the user's actual role from backend
+			if (userRole) {
+				setUserRole(userRole as 'freelancer' | 'client' | 'guest');
+			}
+			
 			Alert.alert("Success", "Account created successfully!", [{ text: "OK", onPress: () => router.replace("/(protected)/(tabs)/(home)/") }]);
 		},
 		onError: (error: any) => {

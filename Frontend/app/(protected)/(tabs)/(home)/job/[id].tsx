@@ -13,7 +13,7 @@
  * - Action buttons (Send Proposal, Save for Later)
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -22,11 +22,13 @@ import {
   TouchableOpacity,
   Image,
   SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '@/constants/Colors';
+import { jobsApi } from '@/api/jobs';
 
 // Type definition for job details data
 interface JobDetailsData {
@@ -92,8 +94,70 @@ export default function JobDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   
-  // Fetch job details (mock data for now)
-  const jobData = getJobDetails(id as string);
+  // State for job data
+  const [jobData, setJobData] = useState<JobDetailsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchJobDetails();
+  }, [id]);
+
+  const fetchJobDetails = async () => {
+    try {
+      setLoading(true);
+      const response = await jobsApi.getJobById(id as string);
+      if (response.success && response.data) {
+        const job = response.data.data || response.data;
+        // Transform API data to match our interface
+        const transformedJob: JobDetailsData = {
+          id: job.id || job._id,
+          title: job.title,
+          category: job.category?.name || job.category || 'Other',
+          budget: `${parseFloat(job.budget_min?.$numberDecimal || job.budget_min || job.budget?.$numberDecimal || job.budget || 0)}-${parseFloat(job.budget_max?.$numberDecimal || job.budget_max || job.budget?.$numberDecimal || job.budget || 0)} KD`,
+          client: {
+            name: job.client?.name || 'Client',
+            avatar: job.client?.profile_image_url || 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg',
+            rating: job.client?.rating || 4.5,
+            reviewCount: job.client?.reviewCount || 0,
+            location: job.client?.location || 'Unknown',
+          },
+          description: job.description,
+          deliverables: job.deliverables || [],
+          attachments: job.attachments?.map((att: any) => ({
+            type: att.type || 'doc',
+            name: att.name || 'Attachment',
+            size: att.size || 'Unknown',
+          })) || [],
+          skills: job.skills || [],
+          deliveryTime: job.duration || '5 days',
+          budgetType: job.projectType === 'Hourly' ? 'hourly' : 'fixed',
+          postedTime: getTimeAgo(job.created_at || new Date().toISOString()),
+        };
+        setJobData(transformedJob);
+      }
+    } catch (err) {
+      console.error('Failed to fetch job details:', err);
+      setError('Failed to load job details');
+      // Use mock data as fallback
+      setJobData(getJobDetails(id as string));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(hours / 24);
+    
+    if (hours < 1) return 'Just now';
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+    return `${Math.floor(days / 7)} week${days >= 14 ? 's' : ''} ago`;
+  };
 
   // Get icon for attachment type
   const getAttachmentIcon = (type: string) => {
@@ -118,6 +182,50 @@ export default function JobDetailsScreen() {
     ];
     return colors[index % colors.length];
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <Ionicons name="arrow-back" size={24} color={COLORS.textPrimary} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Job Details</Text>
+          </View>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.accent} />
+          <Text style={styles.loadingText}>Loading job details...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !jobData) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <Ionicons name="arrow-back" size={24} color={COLORS.textPrimary} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Job Details</Text>
+          </View>
+        </View>
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle" size={64} color={COLORS.error} />
+          <Text style={styles.errorText}>{error || 'Job not found'}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -716,5 +824,27 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontSize: 16,
     fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: COLORS.textSecondary,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: COLORS.error,
+    textAlign: 'center',
   },
 });

@@ -11,8 +11,8 @@
  * This screen helps users manage incoming proposals for their job posts
  */
 
-import React, { useState, useMemo, useContext } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useMemo, useContext, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { COLORS } from '@/constants/Colors';
@@ -23,6 +23,8 @@ import TopBar from '@/components/Home/TopBar';
 import AuthContext from '@/context/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import proposalApi from '@/api/proposals';
+import { jobsApi } from '@/api/jobs';
 
 // Mock proposal data for clients - proposals received from freelancers
 const mockReceivedProposals: Proposal[] = [
@@ -138,30 +140,111 @@ export default function ProposalsScreen() {
   // Get user role and auth status from auth context
   const { userRole, isAuthenticated } = useContext(AuthContext);
   
-  // State for currently selected tab (Active/Completed/Cancelled)
-  const [selectedTab, setSelectedTab] = useState<TabType>('Active');
+  // State for currently selected tab (Pending/Accepted/Declined)
+  const [selectedTab, setSelectedTab] = useState<TabType>('Pending');
   
   // State for current page in pagination
   const [currentPage, setCurrentPage] = useState(1);
   
+  // State for proposals data
+  const [proposals, setProposals] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  
   // Number of proposals to show per page
   const itemsPerPage = 4;
 
-  // Select the appropriate proposals based on user role
-  const proposals = userRole === 'client' ? mockReceivedProposals : mockSentProposals;
+  // Fetch proposals on mount and when user role changes
+  useEffect(() => {
+    if (isAuthenticated && userRole) {
+      fetchProposals();
+    }
+  }, [userRole, isAuthenticated]);
+
+  const fetchProposals = async () => {
+    try {
+      setLoading(true);
+      let response;
+      
+      if (userRole === 'client') {
+        // Fetch all jobs for the client first
+        const jobsResponse = await jobsApi.getMyJobs();
+        if (jobsResponse.success && jobsResponse.data) {
+          const allProposals: any[] = [];
+          
+          // For each job, fetch its proposals
+          for (const job of jobsResponse.data.jobs) {
+            try {
+              const proposalsResponse = await proposalApi.getJobProposals(job._id || job.id);
+              if (proposalsResponse.success && proposalsResponse.data && 'proposals' in proposalsResponse.data) {
+                const jobProposals = proposalsResponse.data.proposals.map((p: any) => ({
+                  ...p,
+                  projectTitle: job.title,
+                  jobId: job._id || job.id,
+                }));
+                allProposals.push(...jobProposals);
+              }
+            } catch (err) {
+              console.error(`Failed to fetch proposals for job ${job._id}:`, err);
+            }
+          }
+          setProposals(allProposals);
+        }
+      } else {
+        // Freelancer: fetch their submitted proposals
+        response = await proposalApi.getMyProposals();
+        if (response.success && response.data && 'proposals' in response.data) {
+          setProposals(response.data.proposals);
+        }
+      }
+    } catch (error) {
+      console.log('Failed to fetch proposals - using mock data');
+      // Fallback to mock data
+      setProposals(userRole === 'client' ? mockReceivedProposals : mockSentProposals);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchProposals();
+  };
+
+  // Transform API proposals to match the ProposalCard interface
+  const transformedProposals = useMemo(() => {
+    return proposals.map((p: any) => ({
+      id: p._id || p.id,
+      freelancerName: userRole === 'client' ? p.freelancer?.name || 'Freelancer' : p.job?.client?.name || 'Client',
+      freelancerAvatar: userRole === 'client' 
+        ? p.freelancer?.profile_image_url || 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg'
+        : p.job?.client?.profile_image_url || 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg',
+      projectTitle: p.projectTitle || p.job?.title || 'Project',
+      rating: 4.5, // Default rating
+      price: parseFloat(p.proposed_price?.$numberDecimal || p.proposed_price || 0),
+      duration: p.job?.duration || '7 days',
+      description: p.cover_letter || 'No description provided',
+      status: p.status || 'active',
+    }));
+  }, [proposals, userRole]);
 
   // Filter proposals based on selected tab
   // Uses memoization to avoid unnecessary recalculations
   const filteredProposals = useMemo(() => {
     // Map tab names to proposal status values
     const statusMap = {
-      'Active': 'active',
-      'Completed': 'completed',
-      'Cancelled': 'cancelled'
+      'Pending': 'active',      // Active proposals are pending response
+      'Accepted': 'completed',  // Completed means accepted
+      'Declined': 'rejected'    // Rejected means declined
     };
     // Return only proposals matching current tab status
-    return proposals.filter(p => p.status === statusMap[selectedTab]);
-  }, [selectedTab, proposals]);  // Recalculate when tab or role changes
+    // Also include cancelled proposals in the Declined tab
+    if (selectedTab === 'Declined') {
+      return transformedProposals.filter(p => p.status === 'rejected' || p.status === 'cancelled');
+    }
+    return transformedProposals.filter(p => p.status === statusMap[selectedTab]);
+  }, [selectedTab, transformedProposals]);  // Recalculate when tab or data changes
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredProposals.length / itemsPerPage);
@@ -180,13 +263,17 @@ export default function ProposalsScreen() {
 
   // Handler for viewing full proposal details
   // Navigates to detail screen with proposal data
-  const handleViewDetails = (proposal: Proposal) => {
+  const handleViewDetails = (proposal: any) => {
+    // Find the original proposal data
+    const originalProposal = proposals.find(p => (p._id || p.id) === proposal.id);
+    
     // Navigate to dynamic route [id].tsx with proposal info
     router.push({
       pathname: '/(protected)/(tabs)/(proposals)/[id]',
       params: { 
         id: proposal.id,           // Pass proposal ID
-        status: proposal.status    // Pass status for proper display
+        status: proposal.status,   // Pass status for proper display
+        jobId: originalProposal?.jobId || originalProposal?.job?._id || originalProposal?.job?.id
       }
     });
   };
@@ -225,7 +312,16 @@ export default function ProposalsScreen() {
         {/* Top navigation bar component */}
         <TopBar />
         
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={COLORS.accent}
+            />
+          }
+        >
           {/* Page Header - Title and description */}
           <View style={styles.header}>
             <Text style={styles.title}>Proposals</Text>
@@ -244,7 +340,12 @@ export default function ProposalsScreen() {
 
           {/* Proposals List - Main content area */}
           <View style={styles.proposalsList}>
-            {paginatedProposals.length > 0 ? (
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={COLORS.accent} />
+                <Text style={styles.loadingText}>Loading proposals...</Text>
+              </View>
+            ) : paginatedProposals.length > 0 ? (
               // Map through proposals and render cards
               paginatedProposals.map((proposal) => (
                 <ProposalCard
@@ -258,8 +359,8 @@ export default function ProposalsScreen() {
               <View style={styles.emptyState}>
                 <Text style={styles.emptyText}>
                   {userRole === 'client' 
-                    ? `No ${selectedTab.toLowerCase()} proposals received`
-                    : `No ${selectedTab.toLowerCase()} proposals sent`}
+                    ? `No ${selectedTab === 'Pending' ? 'pending' : selectedTab === 'Accepted' ? 'accepted' : 'declined'} proposals received`
+                    : `No ${selectedTab === 'Pending' ? 'pending' : selectedTab === 'Accepted' ? 'accepted' : 'declined'} proposals sent`}
                 </Text>
               </View>
             )}
@@ -365,5 +466,17 @@ const styles = StyleSheet.create({
     color: COLORS.background,
     fontSize: 16,
     fontWeight: '600',
+  },
+  // Loading container
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  // Loading text
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: COLORS.textSecondary,
   },
 });

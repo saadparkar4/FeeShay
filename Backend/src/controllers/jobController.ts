@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Job, Category, ClientProfile } from "../models";
+import { Job, Category, ClientProfile, Proposal } from "../models";
 import { createError, asyncHandler } from "../middlewares/errorHandler";
 
 interface AuthRequest extends Request {
@@ -58,12 +58,23 @@ export const getJobs = asyncHandler(async (req: Request, res: Response): Promise
 
     const jobs = await Job.find(filter).populate("category", "name description").populate("client", "name location").sort({ created_at: -1 }).skip(skip).limit(Number(limit));
 
+    // Add proposal count to each job
+    const jobsWithProposalCount = await Promise.all(
+        jobs.map(async (job) => {
+            const proposalCount = await Proposal.countDocuments({ job: job._id });
+            return {
+                ...job.toObject(),
+                proposal_count: proposalCount,
+            };
+        })
+    );
+
     const total = await Job.countDocuments(filter);
 
     res.json({
         success: true,
         data: {
-            jobs,
+            jobs: jobsWithProposalCount,
             pagination: {
                 page: Number(page),
                 limit: Number(limit),
@@ -83,9 +94,16 @@ export const getJobById = asyncHandler(async (req: Request, res: Response): Prom
         throw createError("Job not found", 404);
     }
 
+    // Add proposal count
+    const proposalCount = await Proposal.countDocuments({ job: job._id });
+    const jobWithProposalCount = {
+        ...job.toObject(),
+        proposal_count: proposalCount,
+    };
+
     res.json({
         success: true,
-        data: job,
+        data: jobWithProposalCount,
     });
 });
 
@@ -165,12 +183,23 @@ export const getMyJobs = asyncHandler(async (req: AuthRequest, res: Response): P
 
     const jobs = await Job.find(filter).populate("category", "name description").sort({ created_at: -1 }).skip(skip).limit(Number(limit));
 
+    // Add proposal count to each job
+    const jobsWithProposalCount = await Promise.all(
+        jobs.map(async (job) => {
+            const proposalCount = await Proposal.countDocuments({ job: job._id });
+            return {
+                ...job.toObject(),
+                proposal_count: proposalCount,
+            };
+        })
+    );
+
     const total = await Job.countDocuments(filter);
 
     res.json({
         success: true,
         data: {
-            jobs,
+            jobs: jobsWithProposalCount,
             pagination: {
                 page: Number(page),
                 limit: Number(limit),

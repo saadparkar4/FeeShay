@@ -12,7 +12,7 @@
  * and showcases their professional profile
  */
 
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   View,
   ScrollView,
@@ -25,6 +25,7 @@ import { useRouter } from 'expo-router';
 import { deleteToken } from '@/api/storage';
 import AuthContext from '@/context/AuthContext';
 import { COLORS } from '@/constants/Colors';
+import ConfirmationModal from '@/components/Common/ConfirmationModal';
 // Profile component imports - each handles a specific section
 import UserInfoCard from '@/components/Profile/UserInfoCard';
 import ProfileDetails from '@/components/Profile/ProfileDetails';
@@ -35,10 +36,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 export default function ProfileScreen() {
   // Authentication context for managing login state
-  const { setIsAuthenticated, isAuthenticated } = useContext(AuthContext);
+  const { setIsAuthenticated, isAuthenticated, userRole, setUserRole } = useContext(AuthContext);
   
   // Router for navigation between screens
   const router = useRouter();
+  
+  // State for role switching modal
+  const [showRoleModal, setShowRoleModal] = useState(false);
 
   // Handles user logout - clears token and updates auth state
   const handleLogout = () => {
@@ -63,9 +67,14 @@ export default function ProfileScreen() {
 
   // Handler for switching between freelancer/client roles
   const handleSwitchRole = () => {
-    console.log('Switching role...');
-    /* TODO: Implement role switching logic
-       This would update user's active role in the app */
+    setShowRoleModal(true);
+  };
+  
+  // Confirm role switch
+  const handleConfirmRoleSwitch = () => {
+    const newRole = userRole === 'freelancer' ? 'client' : 'freelancer';
+    setUserRole(newRole);
+    setShowRoleModal(false);
   };
 
   // Handle sign in navigation for guests
@@ -124,6 +133,19 @@ export default function ProfileScreen() {
             onLogout={handleLogout}
           />
         </ScrollView>
+        
+        {/* Role switching confirmation modal */}
+        <ConfirmationModal
+          visible={showRoleModal}
+          onClose={() => setShowRoleModal(false)}
+          onConfirm={handleConfirmRoleSwitch}
+          title="Switch Role"
+          message={`Are you sure you want to switch to ${userRole === 'freelancer' ? 'Client' : 'Freelancer'} mode?`}
+          icon="swap-horizontal"
+          iconColors={[COLORS.accentTertiary, COLORS.accentSecondary]}
+          confirmText={`Switch to ${userRole === 'freelancer' ? 'Client' : 'Freelancer'}`}
+          cancelText="Cancel"
+        />
       </View>
     </SafeAreaView>
   );

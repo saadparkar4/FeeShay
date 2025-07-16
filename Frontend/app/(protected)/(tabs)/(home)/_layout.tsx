@@ -1,20 +1,44 @@
 import { Stack } from "expo-router";
-import { StatusBar, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar, TouchableOpacity } from "react-native";
 import { COLORS } from "../../../../constants/Colors";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function HomeLayout() {
 	return (
-		<SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-			<Stack screenOptions={{ headerShown: false }} />
-			<StatusBar barStyle={"default"} backgroundColor={COLORS.background} />
-		</SafeAreaView>
+		<>
+			<StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+			<Stack screenOptions={{ headerShown: false }}>
+				<Stack.Screen 
+					name="index" 
+					options={{ 
+						title: "Home",
+						headerShown: false 
+					}} 
+				/>
+				<Stack.Screen 
+					name="notifications" 
+					options={{ 
+						title: "Notifications",
+						
+						headerShown: false,
+					
+					}} 
+				/>
+				<Stack.Screen 
+					name="job/[id]" 
+					options={{ 
+						title: "Job Details",
+						headerShown: false 
+					}} 
+				/>
+				<Stack.Screen 
+					name="job/send-proposal" 
+					options={{ 
+						title: "Send Proposal",
+						headerShown: false 
+					}} 
+				/>
+			</Stack>
+		</>
 	);
 }
-
-const styles = StyleSheet.create({
-	safeArea: {
-		flex: 1,
-		backgroundColor: COLORS.background,
-	},
-});	

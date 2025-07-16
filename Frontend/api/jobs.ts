@@ -87,6 +87,50 @@ export interface JobQueryParams {
 }
 
 /**
+ * Job creation data interface
+ */
+export interface CreateJobData {
+  title: string;
+  description: string;
+  category: string;
+  budget_min: number;
+  budget_max: number;
+  budget: number;
+  duration: string;
+  skills: string[];
+  projectType: 'Fixed Price' | 'Hourly';
+  experienceLevel: 'Entry' | 'Intermediate' | 'Expert';
+  status?: string;
+  visibility?: string;
+}
+
+/**
+ * Create job response interface
+ */
+export interface CreateJobResponse {
+  success: boolean;
+  message: string;
+  data: Job;
+}
+
+/**
+ * Category interface
+ */
+export interface Category {
+  _id: string;
+  name: string;
+  description?: string;
+}
+
+/**
+ * Categories response interface
+ */
+export interface CategoriesResponse {
+  success: boolean;
+  data: Category[];
+}
+
+/**
  * Jobs API endpoints
  */
 export const jobsApi = {
@@ -110,7 +154,7 @@ export const jobsApi = {
     }
     
     const queryString = queryParams.toString();
-    const url = `/api/v1/jobs${queryString ? `?${queryString}` : ''}`;
+    const url = `/jobs${queryString ? `?${queryString}` : ''}`;
     
     const response = await apiClient.get<JobsResponse>(url);
     return response.data;
@@ -122,7 +166,35 @@ export const jobsApi = {
    * @returns Promise with job data
    */
   getJobById: async (id: string): Promise<JobResponse> => {
-    const response = await apiClient.get<JobResponse>(`/api/v1/jobs/${id}`);
+    const response = await apiClient.get<JobResponse>(`/jobs/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Create a new job
+   * @param jobData Job creation data
+   * @returns Promise with created job data
+   */
+  createJob: async (jobData: CreateJobData): Promise<CreateJobResponse> => {
+    const response = await apiClient.post<CreateJobResponse>('/jobs', jobData);
+    return response.data;
+  },
+
+  /**
+   * Get all categories
+   * @returns Promise with categories data
+   */
+  getCategories: async (): Promise<CategoriesResponse> => {
+    const response = await apiClient.get<CategoriesResponse>('/jobs/categories');
+    return response.data;
+  },
+
+  /**
+   * Get current user's jobs (for clients)
+   * @returns Promise with user's jobs
+   */
+  getMyJobs: async (): Promise<JobsResponse> => {
+    const response = await apiClient.get<JobsResponse>('/jobs/my/jobs');
     return response.data;
   },
 };

@@ -10,11 +10,9 @@ interface UserInfoCardProps {
 }
 
 export default function UserInfoCard({ onSwitchRole }: UserInfoCardProps) {
-  const { userRole, setUserRole } = useContext(AuthContext);
+  const { userRole } = useContext(AuthContext);
   
   const handleSwitchRole = () => {
-    const newRole = userRole === 'freelancer' ? 'client' : 'freelancer';
-    setUserRole(newRole);
     onSwitchRole?.();
   };
   return (

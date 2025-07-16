@@ -1,5 +1,5 @@
-import React, { useState, useContext } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, ScrollView, SafeAreaView, Platform } from 'react-native';
+import React, { useState, useContext, useEffect } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, ScrollView, SafeAreaView, Platform, ActivityIndicator, RefreshControl } from 'react-native';
 import Constants from 'expo-constants';
 import TopBar from '../../../../components/Home/TopBar';
 import SearchBar from '../../../../components/Home/SearchBar';
@@ -10,6 +10,7 @@ import JobCard from '../../../../components/Home/JobCard';
 import Fab from '../../../../components/Home/Fab';
 import { COLORS } from '../../../../constants/Colors';
 import AuthContext from '@/context/AuthContext';
+import { jobsApi } from '@/api/jobs';
 
 // ============================================================================
 // DYNAMIC CATEGORY GENERATION
@@ -197,6 +198,50 @@ export default function HomeScreen() {
   const [selectedCategory, setSelectedCategory] = useState('All Categories');  // Currently selected category filter
   const [tab, setTab] = useState<'talents' | 'jobs'>(userRole === 'client' ? 'talents' : 'jobs'); // Set initial tab based on role
   const [search, setSearch] = useState('');                                    // Search query text
+  const [realJobs, setRealJobs] = useState<any[]>([]);                        // Real jobs from API
+  const [loading, setLoading] = useState(false);                              // Loading state
+  const [refreshing, setRefreshing] = useState(false);                        // Refresh state
+
+  // Fetch jobs from API when component mounts or when tab changes to jobs
+  useEffect(() => {
+    if (userRole === 'freelancer' || tab === 'jobs') {
+      fetchJobs();
+    }
+  }, [userRole, tab]);
+
+  const fetchJobs = async () => {
+    try {
+      setLoading(true);
+      const response = await jobsApi.getJobs({ status: 'open' });
+      if (response.success && response.data) {
+        // Transform API data to match the expected format
+        const transformedJobs = response.data.jobs.map((job: any) => ({
+          id: job._id || job.id,
+          title: job.title,
+          image: job.image || 'https://storage.googleapis.com/uxpilot-auth.appspot.com/8decf4170a-1220338dc9ccd47cd233.png',
+          sellerAvatar: job.client?.profile_image_url || 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg',
+          sellerName: job.client?.name || 'Client',
+          rating: job.client?.rating || 4.5,
+          ratingCount: job.client?.reviewCount || 0,
+          category: job.category?.name || job.category || 'Other',
+          price: parseFloat(job.budget_max?.$numberDecimal || job.budget_max || job.budget?.$numberDecimal || job.budget || job.price || 100),
+        }));
+        setRealJobs(transformedJobs);
+      }
+    } catch (error: any) {
+      console.log('Failed to fetch jobs - using mock data');
+      // Fallback to mock data if API fails
+      setRealJobs(jobs);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchJobs();
+  };
 
   // ============================================================================
   // DYNAMIC CATEGORY GENERATION
@@ -204,7 +249,7 @@ export default function HomeScreen() {
   // Generate categories with item counts based on user role
   // This shows users how many items are in each category
   const getCategoriesWithCounts = () => {
-    const currentData = userRole === 'client' ? talents : jobs;
+    const currentData = userRole === 'client' ? talents : (realJobs.length > 0 ? realJobs : jobs);
     const dynamicCategories = getDynamicCategories(currentData);
     const categoryCounts = currentData.reduce((acc, item) => {
       acc[item.category] = (acc[item.category] || 0) + 1;
@@ -240,7 +285,8 @@ export default function HomeScreen() {
   // Filter jobs based on search query and selected category
   // Search matches: title, description
   // Category filter: exact category match or "All Categories"
-  const filteredJobs = jobs.filter((job) => {
+  const jobsToFilter = realJobs.length > 0 ? realJobs : jobs;
+  const filteredJobs = jobsToFilter.filter((job) => {
     const matchesSearch = search === '' || 
       job.title.toLowerCase().includes(search.toLowerCase()) 
       
@@ -258,7 +304,7 @@ export default function HomeScreen() {
   // If current category has no items in new tab, reset to "All Categories"
   const handleTabChange = (newTab: 'talents' | 'jobs') => {
     setTab(newTab);
-    const currentData = newTab === 'talents' ? talents : jobs;
+    const currentData = newTab === 'talents' ? talents : (realJobs.length > 0 ? realJobs : jobs);
     const availableCategories = getDynamicCategories(currentData);
     const hasItemsInCategory = availableCategories.includes(selectedCategory);
     
@@ -288,7 +334,19 @@ export default function HomeScreen() {
         <TopBar />
         
         {/* Main scrollable content area */}
-        <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          contentContainerStyle={{ paddingBottom: 120 }} 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            userRole === 'freelancer' ? (
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={COLORS.accent}
+              />
+            ) : undefined
+          }
+        >
           {/* Role-based header */}
           <View style={styles.roleHeader}>
             <Text style={styles.roleHeaderTitle}>
@@ -324,6 +382,12 @@ export default function HomeScreen() {
                 const borderColor = borderColors[index % borderColors.length];
                 return <TalentCard key={talent.id} talent={talent} borderColor={borderColor} />
               })
+            ) : loading ? (
+              // Loading state for jobs
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={COLORS.accent} />
+                <Text style={styles.loadingText}>Loading jobs...</Text>
+              </View>
             ) : (
               // Freelancer sees jobs (Looking for Jobs)
               filteredJobs.map((job) => <JobCard key={job.id} job={job} />)
@@ -386,6 +450,18 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     textAlign: 'center',
     fontWeight: '500',
+  },
+  
+  // Loading state styles
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: COLORS.textSecondary,
   },
   
   // Role-based header styles

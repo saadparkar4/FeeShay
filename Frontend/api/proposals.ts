@@ -1,5 +1,4 @@
-import axios from 'axios';
-import { API_BASE_URL } from './config';
+import apiClient from './index';
 
 export interface Proposal {
   _id: string;
@@ -48,12 +47,7 @@ export interface ProposalResponse {
 const proposalApi = {
   // Create new proposal (freelancer)
   createProposal: async (data: CreateProposalData): Promise<ProposalResponse> => {
-    const response = await axios.post(`${API_BASE_URL}/proposals`, data, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await apiClient.post('/proposals', data);
     return response.data;
   },
 
@@ -65,43 +59,25 @@ const proposalApi = {
     job?: string;
     freelancer?: string;
   }): Promise<ProposalResponse> => {
-    const response = await axios.get(`${API_BASE_URL}/proposals`, {
-      params,
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
+    const response = await apiClient.get('/proposals', { params });
     return response.data;
   },
 
   // Get proposal by ID
   getProposalById: async (id: string): Promise<ProposalResponse> => {
-    const response = await axios.get(`${API_BASE_URL}/proposals/${id}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
+    const response = await apiClient.get(`/proposals/${id}`);
     return response.data;
   },
 
   // Update proposal (freelancer)
   updateProposal: async (id: string, data: Partial<CreateProposalData>): Promise<ProposalResponse> => {
-    const response = await axios.put(`${API_BASE_URL}/proposals/${id}`, data, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await apiClient.put(`/proposals/${id}`, data);
     return response.data;
   },
 
   // Delete proposal (freelancer)
   deleteProposal: async (id: string): Promise<ProposalResponse> => {
-    const response = await axios.delete(`${API_BASE_URL}/proposals/${id}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
+    const response = await apiClient.delete(`/proposals/${id}`);
     return response.data;
   },
 
@@ -111,12 +87,7 @@ const proposalApi = {
     limit?: number;
     status?: string;
   }): Promise<ProposalResponse> => {
-    const response = await axios.get(`${API_BASE_URL}/proposals/my/proposals`, {
-      params,
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
+    const response = await apiClient.get('/proposals/my/proposals', { params });
     return response.data;
   },
 
@@ -126,25 +97,13 @@ const proposalApi = {
     limit?: number;
     status?: string;
   }): Promise<ProposalResponse> => {
-    const response = await axios.get(`${API_BASE_URL}/proposals/job/${jobId}`, {
-      params,
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
+    const response = await apiClient.get(`/proposals/job/${jobId}`, { params });
     return response.data;
   },
 
   // Update proposal status (client - accept/reject)
   updateProposalStatus: async (id: string, status: 'completed' | 'rejected'): Promise<ProposalResponse> => {
-    const response = await axios.put(`${API_BASE_URL}/proposals/${id}/status`, {
-      status,
-    }, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await apiClient.put(`/proposals/${id}/status`, { status });
     return response.data;
   },
 };

@@ -31,7 +31,7 @@ export const authApi = {
   login: async (data: LoginData): Promise<AuthResponse> => {
     try {
       console.log("Login request data:", data);
-      const response = await apiClient.post<AuthResponse>("/api/v1/auth/login", data);
+      const response = await apiClient.post<AuthResponse>("/auth/login", data);
       console.log("Login response:", response.data);
       
       if (response.data.data.token) {
@@ -48,7 +48,7 @@ export const authApi = {
   register: async (data: RegisterData): Promise<AuthResponse> => {
     try {
       console.log("Register request data:", data);
-      const response = await apiClient.post<AuthResponse>("/api/v1/auth/register", data);
+      const response = await apiClient.post<AuthResponse>("/auth/register", data);
       console.log("Register response:", response.data);
       
       if (response.data.data.token) {
@@ -72,7 +72,7 @@ export const authApi = {
 
   getProfile: async () => {
     try {
-      const response = await apiClient.get("/api/v1/auth/profile");
+      const response = await apiClient.get("/auth/profile");
       return response.data;
     } catch (error: any) {
       throw error;
@@ -81,7 +81,7 @@ export const authApi = {
 
   updateProfile: async (data: any) => {
     try {
-      const response = await apiClient.put("/api/v1/auth/profile", data);
+      const response = await apiClient.put("/auth/profile", data);
       return response.data;
     } catch (error: any) {
       throw error;
@@ -90,7 +90,7 @@ export const authApi = {
 
   changePassword: async (currentPassword: string, newPassword: string) => {
     try {
-      const response = await apiClient.put("/api/v1/auth/change-password", {
+      const response = await apiClient.put("/auth/change-password", {
         currentPassword,
         newPassword,
       });
@@ -102,7 +102,7 @@ export const authApi = {
 
   forgotPassword: async (email: string) => {
     try {
-      const response = await apiClient.post("/api/v1/auth/forgot-password", { email });
+      const response = await apiClient.post("/auth/forgot-password", { email });
       return response.data;
     } catch (error: any) {
       throw error;

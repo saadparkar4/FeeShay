@@ -22,15 +22,18 @@ import {
   SafeAreaView,
   Platform,
   KeyboardAvoidingView,
+  Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '@/constants/Colors';
+import proposalApi from '@/api/proposals';
 
 export default function SendProposalScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const jobId = params.jobId as string; // Get jobId from route params
   
   // Form state
   const [selectedService, setSelectedService] = useState('Logo Design Package - Starting at 75 KD');
@@ -39,6 +42,7 @@ export default function SendProposalScreen() {
   const [deliverables, setDeliverables] = useState('');
   const [budget, setBudget] = useState('75');
   const [attachments, setAttachments] = useState<Array<{id: string; name: string; size: string}>>([]);
+  const [loading, setLoading] = useState(false);
 
   // Mock services data
   const services = [
@@ -48,9 +52,50 @@ export default function SendProposalScreen() {
     'Custom Illustration - Starting at 90 KD',
   ];
 
-  const handleSendProposal = () => {
-    // TODO: Implement proposal submission
-    console.log('Sending proposal...');
+  const handleSendProposal = async () => {
+    if (!description || !budget) {
+      Alert.alert('Error', 'Please fill in all required fields');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Combine all the form data into cover letter
+      const coverLetter = `
+Service: ${selectedService}
+
+Project Title: ${projectTitle || 'N/A'}
+
+Description:
+${description}
+
+Deliverables:
+${deliverables || 'As discussed'}
+
+Timeline: 5-7 business days
+      `.trim();
+
+      const proposalData = {
+        job: jobId,
+        cover_letter: coverLetter,
+        proposed_price: parseFloat(budget),
+      };
+
+      const response = await proposalApi.createProposal(proposalData);
+
+      if (response.success) {
+        Alert.alert('Success', 'Your proposal has been submitted successfully!', [
+          {
+            text: 'OK',
+            onPress: () => router.back(),
+          },
+        ]);
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.message || 'Failed to submit proposal');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddFiles = () => {
@@ -217,7 +262,7 @@ export default function SendProposalScreen() {
               style={styles.sendButton}
             >
               
-              <Text style={styles.sendButtonText}>Submit Proposal</Text>
+              <Text style={styles.sendButtonText}>{loading ? 'Submitting...' : 'Submit Proposal'}</Text>
             </LinearGradient>
           </TouchableOpacity>
 

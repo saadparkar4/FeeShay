@@ -73,6 +73,14 @@ export const login = asyncHandler(async (req: Request, res: Response): Promise<v
         throw createError("Invalid credentials", 401);
     }
 
+    // Debug log
+    console.log("User found:", { email: user.email, hasPassword: !!user.password_hash });
+    
+    // Check if password_hash exists
+    if (!user.password_hash) {
+        throw createError("User account is corrupted. Please contact support.", 500);
+    }
+
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     if (!isPasswordValid) {

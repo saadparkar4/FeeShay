@@ -67,7 +67,7 @@ export function ProposalCard({ proposal, onViewDetails }: ProposalCardProps) {
             {/* Price display with dollar sign */}
             <View style={styles.detailItem}>
               <Text style={styles.dollarSign}>$ </Text>
-              <Text style={styles.detailValue}>${proposal.price.toLocaleString()}</Text>
+              <Text style={styles.detailValue}>{proposal.price} KD</Text>
             </View>
             {/* Duration display with clock icon */}
             <View style={styles.detailItem}>

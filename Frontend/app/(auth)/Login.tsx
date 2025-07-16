@@ -10,7 +10,7 @@ import LogoImage from "@/components/Home/Logo";
 
 export default function LoginScreen() {
 	// Context
-	const { setIsAuthenticated } = useContext(AuthContext);
+	const { setIsAuthenticated, setUserRole } = useContext(AuthContext);
 
 	// State
 	const [email, setEmail] = useState("");
@@ -22,8 +22,18 @@ export default function LoginScreen() {
 	const { mutate: login, isPending } = useMutation({
 		mutationKey: ["login"],
 		mutationFn: () => authApi.login({ email: email.toLowerCase().trim(), password }),
-		onSuccess: () => {
+		onSuccess: (response) => {
+			// Extract user role from response
+			const userRole = response.data?.user?.role || response.user?.role;
+			
+			// Set authentication status
 			setIsAuthenticated(true);
+			
+			// Set the user's actual role from backend
+			if (userRole) {
+				setUserRole(userRole as 'freelancer' | 'client' | 'guest');
+			}
+			
 			Alert.alert("Success", "Login successful!", [{ text: "OK", onPress: () => router.replace("/(protected)/(tabs)/(home)/") }]);
 		},
 		onError: (error: any) => {

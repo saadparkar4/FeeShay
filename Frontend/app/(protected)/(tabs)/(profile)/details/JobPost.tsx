@@ -10,7 +10,7 @@
  * This screen helps users manage their posted jobs and view proposals
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,11 +19,14 @@ import {
   ScrollView,
   SafeAreaView,
   ColorValue,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { COLORS } from '@/constants/Colors';
+import { jobsApi } from '@/api/jobs';
 
 // Type definition for job post data structure
 interface JobPostData {
@@ -105,6 +108,7 @@ const jobPostsData: JobPostData[] = [
  * @param job - The job post data to display
  */
 const JobPostCard = ({ job }: { job: JobPostData }) => {
+  const router = useRouter();
   // Determines the appropriate colors and text for the status badge
   // Different statuses get different color schemes
   const getStatusStyle = () => {
@@ -218,7 +222,13 @@ const JobPostCard = ({ job }: { job: JobPostData }) => {
       </View>
 
       {/* Dynamic action button - Changes text and color based on job status */}
-      <TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => {
+          if (job.status === 'open') {
+            router.push(`/(protected)/(tabs)/(profile)/details/job-proposals?jobId=${job.id}`);
+          }
+        }}
+      >
         <LinearGradient
           colors={
             job.status === 'open' 
@@ -257,6 +267,81 @@ const JobPostCard = ({ job }: { job: JobPostData }) => {
 export default function JobPostScreen() {
   // Navigation router for handling screen transitions
   const router = useRouter();
+  
+  // State for managing jobs data
+  const [jobs, setJobs] = useState<JobPostData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    fetchMyJobs();
+  }, []);
+
+  const fetchMyJobs = async () => {
+    try {
+      const response = await jobsApi.getMyJobs();
+      if (response.success && response.data) {
+        // Transform API data to match our JobPostData interface
+        const transformedJobs = response.data.jobs.map((job: any) => ({
+          id: job._id || job.id,
+          title: job.title,
+          categories: job.category ? [{ name: job.category.name || job.category, color: 'primary' }] : [],
+          budget: `${parseFloat(job.budget_min?.$numberDecimal || job.budget_min || 0)}-${parseFloat(job.budget_max?.$numberDecimal || job.budget_max || 0)} KD`,
+          proposals: job.proposal_count || job.proposals || 0,
+          status: job.status || 'open',
+          timeAgo: getTimeAgo(job.created_at),
+        }));
+        setJobs(transformedJobs);
+      }
+    } catch (error) {
+      console.error('Failed to fetch jobs:', error);
+      // Use mock data as fallback
+      setJobs(jobPostsData);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchMyJobs();
+  };
+
+  // Helper function to calculate time ago
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    
+    if (days === 0) return 'Today';
+    if (days === 1) return '1 day ago';
+    if (days < 7) return `${days} days ago`;
+    if (days < 30) return `${Math.floor(days / 7)} week${days >= 14 ? 's' : ''} ago`;
+    return `${Math.floor(days / 30)} month${days >= 60 ? 's' : ''} ago`;
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <Ionicons name="arrow-back" size={18} color={COLORS.accent} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>My Job Posts</Text>
+          </View>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.accent} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -276,9 +361,22 @@ export default function JobPostScreen() {
       </View>
 
       {/* Scrollable content area */}
-      <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false} 
+        style={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.accent}
+          />
+        }
+      >
         {/* Post new job button */}
-        <TouchableOpacity style={styles.postNewJobButton}>
+        <TouchableOpacity 
+          style={styles.postNewJobButton}
+          onPress={() => router.push('/(protected)/(tabs)/(profile)/details/create-job')}
+        >
           <LinearGradient
             colors={[COLORS.accent, COLORS.accentSecondary]}
             start={{ x: 0, y: 0 }}
@@ -292,9 +390,19 @@ export default function JobPostScreen() {
 
         {/* List of job posts */}
         <View style={styles.jobsList}>
-          {jobPostsData.map((job) => (
-            <JobPostCard key={job.id} job={job} />
-          ))}
+          {jobs.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="briefcase-outline" size={64} color={COLORS.textSecondary} />
+              <Text style={styles.emptyTitle}>No Jobs Posted Yet</Text>
+              <Text style={styles.emptyText}>
+                Click the button above to post your first job!
+              </Text>
+            </View>
+          ) : (
+            jobs.map((job) => (
+              <JobPostCard key={job.id} job={job} />
+            ))
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -318,13 +426,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    shadowColor: COLORS.secondary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 25,
-    elevation: 8,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -507,5 +608,28 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingTop: 60,
+    paddingHorizontal: 40,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });

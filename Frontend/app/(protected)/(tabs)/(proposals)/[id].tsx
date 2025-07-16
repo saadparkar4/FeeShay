@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,120 +7,211 @@ import {
   TouchableOpacity,
   Image,
   SafeAreaView,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '@/constants/Colors';
 import AuthContext from '@/context/AuthContext';
+import proposalApi, { Proposal } from '@/api/proposals';
 
-// Type definition for proposal status - helps TypeScript understand what values are allowed
-type ProposalStatus = 'active' | 'completed' | 'cancelled';
-
-// Mock data function - simulates fetching proposal data from an API
-// In a real app, this would be replaced with an actual API call
-const getProposalData = (id: string, isClient: boolean) => ({
-  freelancer: {
-    name: isClient ? 'Alex Johnson' : 'Tech Solutions Inc.',
-    title: isClient ? 'Full Stack Developer' : 'Technology Company',
-    location: 'San Francisco, CA',
-    avatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg',
-    rating: 4.7,
-  },
-  project: {
-    title: 'E-commerce Website Redesign',
-    summary: 'Complete redesign of your online store with modern UI/UX and enhanced functionality...',
-    timeline: '14 Days',
-    budget: '$1,200',
-    skills: ['UI/UX Design', 'Web Development', 'E-commerce', 'Responsive'],
-    status: 'active' as ProposalStatus,
-  },
-  proposal: {
-    description: isClient 
-      ? `Hello! I'm excited to work on your e-commerce website redesign project. Based on your requirements, I'll deliver a modern, user-friendly online store that will enhance your customer experience and boost conversions.`
-      : `This is my proposal for the e-commerce website redesign project. I have carefully reviewed the requirements and am confident I can deliver an exceptional solution that meets all your needs.`,
-    deliverables: [
-      'Complete UI/UX redesign with modern aesthetics',
-      'Mobile-responsive design for all devices',
-      'Enhanced product catalog and search functionality',
-      'Streamlined checkout process',
-      'Performance optimization and SEO improvements',
-      'Admin dashboard for easy management',
-    ],
-    approach: isClient
-      ? `I'll use React.js for the frontend and Node.js for the backend, ensuring a fast and scalable solution. The project will be completed in 14 days with regular updates and revisions included.`
-      : `My approach involves using modern technologies including React.js and Node.js. I will provide regular updates throughout the 14-day project timeline.`,
-    closingNote: isClient 
-      ? 'Looking forward to bringing your vision to life!'
-      : 'Thank you for considering my proposal. I look forward to your response.',
-  },
-  attachments: [
-    { type: 'image', name: 'Design Mockup', file: 'portfolio_sample.jpg', icon: 'image' },
-    { type: 'pdf', name: 'Project Plan', file: 'timeline_plan.pdf', icon: 'document' },
-  ],
-  personalNote: isClient
-    ? `I noticed your current website has some performance issues. I'll make sure to optimize the loading speed and implement best practices for better user experience. I'm also available for a quick call to discuss any specific requirements you might have!`
-    : `Additional notes: I've included my portfolio samples and a detailed project plan in the attachments. Feel free to reach out if you need any clarification or have questions about my proposal.`,
-});
+type ProposalStatus = 'active' | 'completed' | 'cancelled' | 'rejected';
 
 export default function ProposalDetailsScreen() {
-  // Extract URL parameters - id is the proposal ID, status is the proposal status
-  const { id, status: paramStatus } = useLocalSearchParams();
-  
-  // Router hook for navigation (e.g., going back to previous screen)
+  const { id } = useLocalSearchParams();
   const router = useRouter();
-  
-  // Get user role from auth context
   const { userRole } = useContext(AuthContext);
   const isClient = userRole === 'client';
   
-  // Fetch proposal data using the ID from URL params
-  const data = getProposalData(id as string, isClient);
-  
-  // Determine the proposal status - use the one from URL params if available,
-  // otherwise fall back to the default status from mock data
-  const status = (paramStatus as ProposalStatus) || data.project.status;
+  const [proposal, setProposal] = useState<Proposal | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
 
-  // Helper function to get appropriate colors and text based on proposal status
+  useEffect(() => {
+    fetchProposal();
+  }, [id]);
+
+  const fetchProposal = async () => {
+    try {
+      setLoading(true);
+      const response = await proposalApi.getProposalById(id as string);
+      if (response.success && response.data && 'job' in response.data) {
+        setProposal(response.data as Proposal);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to load proposal details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAcceptProposal = async () => {
+    Alert.alert(
+      'Accept Proposal',
+      'Are you sure you want to accept this proposal? This will start the project.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Accept',
+          onPress: async () => {
+            try {
+              setUpdating(true);
+              const response = await proposalApi.updateProposalStatus(proposal!._id, 'completed');
+              if (response.success) {
+                Alert.alert('Success', 'Proposal accepted successfully!', [
+                  { text: 'OK', onPress: () => fetchProposal() }
+                ]);
+              }
+            } catch (error) {
+              Alert.alert('Error', 'Failed to accept proposal');
+            } finally {
+              setUpdating(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleRejectProposal = async () => {
+    Alert.alert(
+      'Decline Proposal',
+      'Are you sure you want to decline this proposal?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Decline',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setUpdating(true);
+              const response = await proposalApi.updateProposalStatus(proposal!._id, 'rejected');
+              if (response.success) {
+                Alert.alert('Success', 'Proposal declined', [
+                  { text: 'OK', onPress: () => router.back() }
+                ]);
+              }
+            } catch (error) {
+              Alert.alert('Error', 'Failed to decline proposal');
+            } finally {
+              setUpdating(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const getStatusConfig = () => {
-    switch (status) {
+    if (!proposal) return null;
+    
+    switch (proposal.status) {
       case 'completed':
         return {
-          text: 'Completed',
-          color: '#22C55E',      // Green color for completed
-          bgColor: '#22C55E20',  // Light green background (20% opacity)
+          text: 'Accepted',
+          color: '#22C55E',
+          bgColor: '#22C55E20',
+        };
+      case 'rejected':
+        return {
+          text: 'Declined',
+          color: '#EF4444',
+          bgColor: '#EF444420',
         };
       case 'cancelled':
         return {
           text: 'Cancelled',
-          color: '#EF4444',      // Red color for cancelled
-          bgColor: '#EF444420',  // Light red background (20% opacity)
+          color: '#6B7280',
+          bgColor: '#6B728020',
+        };
+      case 'active':
+        return {
+          text: 'Pending',
+          color: COLORS.accent,
+          bgColor: COLORS.accent + '20',
         };
       default:
-        
-        return null; // Active proposals don't show a status badge
+        return null;
     }
   };
 
-  // Get the status configuration (colors and text)
+  const parseCoverLetter = (coverLetter: string) => {
+    const sections = coverLetter.split('\n\n');
+    const parsed: any = {
+      service: '',
+      title: '',
+      description: '',
+      deliverables: [],
+      timeline: ''
+    };
+
+    sections.forEach(section => {
+      if (section.startsWith('Service:')) {
+        parsed.service = section.replace('Service:', '').trim();
+      } else if (section.startsWith('Project Title:')) {
+        parsed.title = section.replace('Project Title:', '').trim();
+      } else if (section.startsWith('Description:')) {
+        parsed.description = section.replace('Description:', '').trim();
+      } else if (section.startsWith('Deliverables:')) {
+        const deliverableText = section.replace('Deliverables:', '').trim();
+        parsed.deliverables = deliverableText.split('\n').map(d => d.trim()).filter(d => d);
+      } else if (section.startsWith('Timeline:')) {
+        parsed.timeline = section.replace('Timeline:', '').trim();
+      }
+    });
+
+    return parsed;
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={24} color={COLORS.textPrimary} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Proposal Details</Text>
+          <View style={{ width: 40 }} />
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.accent} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!proposal) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={24} color={COLORS.textPrimary} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Proposal Details</Text>
+          <View style={{ width: 40 }} />
+        </View>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.errorText}>Proposal not found</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   const statusConfig = getStatusConfig();
+  const coverLetterData = parseCoverLetter(proposal.cover_letter);
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header Section - Fixed at top with back button, title, and options menu */}
       <View style={styles.header}>
-        {/* Back button - returns to previous screen (proposals list) */}
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
         >
           <Ionicons name="arrow-back" size={24} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        
-        {/* Screen title */}
         <Text style={styles.headerTitle}>Proposal Details</Text>
-        
-        {/* Options menu button (for future features like report, save, etc.) */}
         <TouchableOpacity style={styles.optionsButton}>
           <Ionicons name="ellipsis-vertical" size={24} color={COLORS.textPrimary} />
         </TouchableOpacity>
@@ -130,19 +221,26 @@ export default function ProposalDetailsScreen() {
         {/* Freelancer/Client Header Card */}
         <View style={[styles.card, styles.freelancerCard]}>
           <View style={styles.freelancerInfo}>
-            <Image source={{ uri: data.freelancer.avatar }} style={styles.avatar} />
+            <Image 
+              source={{ uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg' }} 
+              style={styles.avatar} 
+            />
             <View style={styles.freelancerDetails}>
               <View style={styles.nameRow}>
-                <Text style={styles.freelancerName}>{data.freelancer.name}</Text>
+                <Text style={styles.freelancerName}>
+                  {isClient ? proposal.freelancer.name : 'Client'}
+                </Text>
                 <View style={styles.ratingBadge}>
                   <Ionicons name="star" size={14} color="#FFB800" />
-                  <Text style={styles.rating}>{data.freelancer.rating}</Text>
+                  <Text style={styles.rating}>4.7</Text>
                 </View>
               </View>
-              <Text style={styles.freelancerTitle}>{data.freelancer.title}</Text>
+              <Text style={styles.freelancerTitle}>
+                {proposal.freelancer.bio || 'Professional Freelancer'}
+              </Text>
               <View style={styles.locationRow}>
                 <Ionicons name="location" size={12} color={COLORS.textSecondary} />
-                <Text style={styles.location}>{data.freelancer.location}</Text>
+                <Text style={styles.location}>{proposal.freelancer.location || 'Remote'}</Text>
               </View>
             </View>
             <TouchableOpacity style={styles.viewProfileButton}>
@@ -157,7 +255,7 @@ export default function ProposalDetailsScreen() {
           
           <View style={styles.projectInfo}>
             <View style={styles.titleRow}>
-              <Text style={styles.projectTitle}>{data.project.title}</Text>
+              <Text style={styles.projectTitle}>{proposal.job.title}</Text>
               {statusConfig && (
                 <View style={[styles.statusBadge, { backgroundColor: statusConfig.bgColor }]}>
                   <Text style={[styles.statusText, { color: statusConfig.color }]}>
@@ -166,7 +264,7 @@ export default function ProposalDetailsScreen() {
                 </View>
               )}
             </View>
-            <Text style={styles.projectSummary}>{data.project.summary}</Text>
+            <Text style={styles.projectSummary}>{proposal.job.description}</Text>
           </View>
 
           <View style={styles.metricsRow}>
@@ -176,23 +274,23 @@ export default function ProposalDetailsScreen() {
                 <Text style={styles.metricLabel}>Timeline</Text>
               </View>
               <Text style={[styles.metricValue, { color: COLORS.accentTertiary }]}>
-                {data.project.timeline}
+                {coverLetterData.timeline || '5-7 days'}
               </Text>
             </View>
 
             <View style={[styles.metricCard, { backgroundColor: COLORS.accent + '20' }]}>
               <View style={styles.metricHeader}>
                 <Text style={[styles.dollarSign, { color: COLORS.accent }]}>$</Text>
-                <Text style={styles.metricLabel}>Budget</Text>
+                <Text style={styles.metricLabel}>Proposed Price</Text>
               </View>
               <Text style={[styles.metricValue, { color: COLORS.accent }]}>
-                {data.project.budget}
+                {parseFloat(proposal.proposed_price?.$numberDecimal || proposal.proposed_price || 0)} KD
               </Text>
             </View>
           </View>
 
           <View style={styles.skillsContainer}>
-            {data.project.skills.map((skill, index) => (
+            {proposal.freelancer.skills.map((skill, index) => (
               <View
                 key={index}
                 style={[
@@ -235,137 +333,141 @@ export default function ProposalDetailsScreen() {
         <View style={[styles.card, styles.detailsCard]}>
           <Text style={styles.sectionTitle}>Detailed Proposal</Text>
           
-          <Text style={styles.proposalText}>{data.proposal.description}</Text>
+          <Text style={styles.proposalText}>{coverLetterData.description || proposal.cover_letter}</Text>
           
-          <Text style={styles.subheading}>What I'll deliver:</Text>
-          {data.proposal.deliverables.map((item, index) => (
-            <View key={index} style={styles.deliverableItem}>
-              <Text style={styles.bullet}>•</Text>
-              <Text style={styles.deliverableText}>{item}</Text>
-            </View>
-          ))}
-          
-          <Text style={styles.proposalText}>{data.proposal.approach}</Text>
-          
-          <Text style={styles.closingNote}>{data.proposal.closingNote}</Text>
-        </View>
-
-        {/* Attachments */}
-        <View style={[styles.card, styles.attachmentsCard]}>
-          <Text style={styles.sectionTitle}>Attachments</Text>
-          
-          <View style={styles.attachmentsGrid}>
-            {data.attachments.map((attachment, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.attachmentItem,
-                  {
-                    backgroundColor:
-                      index === 0
-                        ? `linear-gradient(135deg, ${COLORS.accent}20 0%, ${COLORS.accentSecondary}20 100%)`
-                        : `linear-gradient(135deg, ${COLORS.accentTertiary}20 0%, ${COLORS.accent}20 100%)`,
-                  },
-                ]}
-              >
-                <LinearGradient
-                  colors={
-                    index === 0
-                      ? [COLORS.accent + '20', COLORS.accentSecondary + '20']
-                      : [COLORS.accentTertiary + '20', COLORS.accent + '20']
-                  }
-                  style={styles.attachmentGradient}
-                >
-                  <Ionicons
-                    name={attachment.icon as any}
-                    size={24}
-                    color={index === 0 ? COLORS.accent : COLORS.accentTertiary}
-                  />
-                  <Text style={styles.attachmentName}>{attachment.name}</Text>
-                  <Text style={styles.attachmentFile}>{attachment.file}</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Personal Note */}
-        <View style={[styles.card, styles.noteCard]}>
-          <View style={styles.noteHeader}>
-            <Ionicons name="document-text" size={18} color={COLORS.accentSecondary} />
-            <Text style={styles.sectionTitle}>Personal Note</Text>
-          </View>
-          <Text style={styles.noteText}>"{data.personalNote}"</Text>
-        </View>
-
-        {/* Spacer for bottom buttons */}
-        <View style={{ height: 120 }} />
-      </ScrollView>
-
-      {/* Action Buttons - Only show for active proposals */}
-      {status === 'active' && (
-        <View style={styles.actionButtons}>
-          {isClient ? (
-            // Client actions: Accept/Decline proposal
+          {coverLetterData.deliverables.length > 0 && (
             <>
-              <View style={styles.topButtonsRow}>
-                <TouchableOpacity style={styles.acceptButtonWrapper}>
-                  <LinearGradient
-                    colors={[COLORS.accent, COLORS.accentSecondary]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.acceptButton}
-                  >
-                    <Ionicons name="checkmark" size={20} color="white" />
-                    <Text style={styles.acceptButtonText}>Accept Proposal</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-                
-                <TouchableOpacity 
-                  style={styles.messageButton}
-                  onPress={() => router.push({ pathname: "/(protected)/(tabs)/(messages)/[id]", params: { id: '1' } })}
-                >
-                  <Ionicons name="chatbubble" size={24} color={COLORS.accentTertiary} />
-                </TouchableOpacity>
-              </View>
-              
-              <TouchableOpacity style={styles.declineButton}>
-                <Ionicons name="close" size={20} color={COLORS.textSecondary} />
-                <Text style={styles.declineButtonText}>Decline Proposal</Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            // Freelancer actions: Edit/Withdraw proposal
-            <>
-              <View style={styles.topButtonsRow}>
-                <TouchableOpacity style={styles.acceptButtonWrapper}>
-                  <LinearGradient
-                    colors={[COLORS.accent, COLORS.accentSecondary]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.acceptButton}
-                  >
-                    <Ionicons name="create" size={20} color="white" />
-                    <Text style={styles.acceptButtonText}>Edit Proposal</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-                
-                <TouchableOpacity 
-                  style={styles.messageButton}
-                  onPress={() => router.push({ pathname: "/(protected)/(tabs)/(messages)/[id]", params: { id: '1' } })}
-                >
-                  <Ionicons name="chatbubble" size={24} color={COLORS.accentTertiary} />
-                </TouchableOpacity>
-              </View>
-              
-              <TouchableOpacity style={styles.declineButton}>
-                <Ionicons name="trash" size={20} color={COLORS.textSecondary} />
-                <Text style={styles.declineButtonText}>Withdraw Proposal</Text>
-              </TouchableOpacity>
+              <Text style={styles.subheading}>What I'll deliver:</Text>
+              {coverLetterData.deliverables.map((item, index) => (
+                <View key={index} style={styles.deliverableItem}>
+                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.deliverableText}>{item}</Text>
+                </View>
+              ))}
             </>
           )}
+          
+          <View style={styles.budgetInfo}>
+            <Text style={styles.subheading}>Budget Details:</Text>
+            <Text style={styles.proposalText}>
+              Job Budget: {parseFloat(proposal.job.budget_min?.$numberDecimal || proposal.job.budget_min || 0)} - {parseFloat(proposal.job.budget_max?.$numberDecimal || proposal.job.budget_max || 0)} KD
+            </Text>
+            <Text style={styles.proposalText}>
+              My Proposal: {parseFloat(proposal.proposed_price?.$numberDecimal || proposal.proposed_price || 0)} KD
+            </Text>
+          </View>
         </View>
-      )}
+
+        {/* Service Information */}
+        {coverLetterData.service && (
+          <View style={[styles.card, styles.noteCard]}>
+            <View style={styles.noteHeader}>
+              <Ionicons name="briefcase" size={18} color={COLORS.accentSecondary} />
+              <Text style={styles.sectionTitle}>Selected Service</Text>
+            </View>
+            <Text style={styles.noteText}>{coverLetterData.service}</Text>
+          </View>
+        )}
+
+        {/* Action Buttons - Only show for active proposals */}
+        {proposal.status === 'active' && (
+          <View style={styles.actionButtons}>
+            {isClient ? (
+              <>
+                <View style={styles.topButtonsRow}>
+                  <TouchableOpacity 
+                    style={styles.acceptButtonWrapper}
+                    onPress={handleAcceptProposal}
+                    disabled={updating}
+                  >
+                    <LinearGradient
+                      colors={[COLORS.accent, COLORS.accentSecondary]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.acceptButton}
+                    >
+                      {updating ? (
+                        <ActivityIndicator color="white" />
+                      ) : (
+                        <>
+                          <Ionicons name="checkmark" size={20} color="white" />
+                          <Text style={styles.acceptButtonText}>Accept Proposal</Text>
+                        </>
+                      )}
+                    </LinearGradient>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={styles.messageButton}
+                    onPress={() => router.push({ pathname: "/(protected)/(tabs)/(messages)/[id]", params: { id: '1' } })}
+                  >
+                    <Ionicons name="chatbubble" size={24} color={COLORS.accentTertiary} />
+                  </TouchableOpacity>
+                </View>
+                
+                <TouchableOpacity 
+                  style={styles.declineButton}
+                  onPress={handleRejectProposal}
+                  disabled={updating}
+                >
+                  <Ionicons name="close" size={20} color={COLORS.textSecondary} />
+                  <Text style={styles.declineButtonText}>Decline Proposal</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <View style={styles.topButtonsRow}>
+                  <TouchableOpacity style={styles.acceptButtonWrapper}>
+                    <LinearGradient
+                      colors={[COLORS.accent, COLORS.accentSecondary]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.acceptButton}
+                    >
+                      <Ionicons name="create" size={20} color="white" />
+                      <Text style={styles.acceptButtonText}>Edit Proposal</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={styles.messageButton}
+                    onPress={() => router.push({ pathname: "/(protected)/(tabs)/(messages)/[id]", params: { id: '1' } })}
+                  >
+                    <Ionicons name="chatbubble" size={24} color={COLORS.accentTertiary} />
+                  </TouchableOpacity>
+                </View>
+                
+                <TouchableOpacity style={styles.declineButton}>
+                  <Ionicons name="trash" size={20} color={COLORS.textSecondary} />
+                  <Text style={styles.declineButtonText}>Withdraw Proposal</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        )}
+
+        {/* Status Message for Non-Active Proposals */}
+        {proposal.status !== 'active' && (
+          <View style={[styles.card, styles.statusMessageCard]}>
+            <Ionicons 
+              name={proposal.status === 'completed' ? 'checkmark-circle' : 'close-circle'} 
+              size={48} 
+              color={proposal.status === 'completed' ? '#22C55E' : '#EF4444'} 
+            />
+            <Text style={styles.statusMessageTitle}>
+              {proposal.status === 'completed' ? 'Proposal Accepted!' : 
+               proposal.status === 'rejected' ? 'Proposal Declined' : 'Proposal Cancelled'}
+            </Text>
+            <Text style={styles.statusMessageText}>
+              {proposal.status === 'completed' 
+                ? 'Congratulations! The client has accepted your proposal. You can now start working on the project.'
+                : proposal.status === 'rejected'
+                ? 'Unfortunately, the client has decided to go with another freelancer for this project.'
+                : 'This proposal has been cancelled.'}
+            </Text>
+          </View>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -382,11 +484,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     backgroundColor: COLORS.background,
-    shadowColor: COLORS.secondary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
   },
   backButton: {
     padding: 8,
@@ -411,8 +508,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     shadowColor: COLORS.secondary,
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
     elevation: 5,
   },
   freelancerCard: {
@@ -598,39 +695,6 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     lineHeight: 20,
   },
-  closingNote: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    fontStyle: 'italic',
-  },
-  attachmentsCard: {
-    borderWidth: 1,
-    borderColor: COLORS.accentSecondary + '20',
-  },
-  attachmentsGrid: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  attachmentItem: {
-    flex: 1,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  attachmentGradient: {
-    padding: 16,
-    alignItems: 'center',
-  },
-  attachmentName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
-    marginTop: 8,
-  },
-  attachmentFile: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginTop: 2,
-  },
   noteCard: {
     backgroundColor: COLORS.background,
     borderWidth: 1,
@@ -648,17 +712,15 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   actionButtons: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: COLORS.background,
-    padding: 20,
+    borderRadius: 24,
+    padding: 24,
+    marginBottom: 16,
     shadowColor: COLORS.secondary,
-    shadowOffset: { width: 0, height: -2 },
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 10,
+    elevation: 5,
   },
   topButtonsRow: {
     flexDirection: 'row',
@@ -701,5 +763,38 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontSize: 16,
     fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+  },
+  budgetInfo: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.secondary + '20',
+  },
+  statusMessageCard: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  statusMessageTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  statusMessageText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    paddingHorizontal: 20,
   },
 });

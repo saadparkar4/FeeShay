@@ -2,7 +2,7 @@ import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { COLORS } from '@/constants/Colors';
 
-export type TabType = 'Active' | 'Completed' | 'Cancelled';
+export type TabType = 'Pending' | 'Accepted' | 'Declined';
 
 interface TabBarProps {
   selectedTab: TabType;
@@ -10,7 +10,7 @@ interface TabBarProps {
 }
 
 export function TabBar({ selectedTab, onTabChange }: TabBarProps) {
-  const tabs: TabType[] = ['Active', 'Completed', 'Cancelled'];
+  const tabs: TabType[] = ['Pending', 'Accepted', 'Declined'];
   
   return (
     <View style={styles.container}>
