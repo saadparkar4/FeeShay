@@ -165,7 +165,7 @@ const ClientJobsSection: React.FC<ClientJobsSectionProps> = ({ jobs = [] }) => {
               </View>
               <View style={styles.statItem}>
                 <Ionicons name="document-text-outline" size={16} color={COLORS.accentSecondary} />
-                <Text style={styles.statText}>{job.proposal_count || 0} proposals</Text>
+                <Text style={styles.statText}>{job.proposals?.length || 0} proposals</Text>
               </View>
             </View>
 
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     color: COLORS.accent,
   },
   addJobCard: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.background,
     borderStyle: 'dashed',
     borderWidth: 2,
     borderColor: COLORS.border,
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.background,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
