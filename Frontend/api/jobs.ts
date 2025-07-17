@@ -37,7 +37,7 @@ export interface Job {
   duration: string;
   skills: string[];
   experienceLevel: 'Entry' | 'Intermediate' | 'Expert';
-  projectType: 'Fixed Price' | 'Hourly';
+  // projectType: 'Fixed Price' | 'Hourly';
   proposals: number;
   postedDate: string;
   client: JobClient;
@@ -98,7 +98,7 @@ export interface CreateJobData {
   budget: number;
   duration: string;
   skills: string[];
-  projectType: 'Fixed Price' | 'Hourly';
+  // projectType: 'Fixed Price' | 'Hourly';
   experienceLevel: 'Entry' | 'Intermediate' | 'Expert';
   status?: string;
   visibility?: string;

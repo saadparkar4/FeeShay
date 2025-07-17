@@ -26,7 +26,7 @@ export interface IJob extends Document {
   category: string;
   skills: string[];
   experienceLevel: 'Entry' | 'Intermediate' | 'Expert';
-  projectType: 'Fixed Price' | 'Hourly';
+  // projectType: 'Fixed Price' | 'Hourly';
   hourlyRate?: number;
   attachments: string[];
   proposals: number;
@@ -77,11 +77,11 @@ const JobSchema = new Schema<IJob>(
       enum: ['Entry', 'Intermediate', 'Expert'],
       required: [true, 'Experience level is required'],
     },
-    projectType: {
-      type: String,
-      enum: ['Fixed Price', 'Hourly'],
-      required: [true, 'Project type is required'],
-    },
+    // projectType: {
+    //   type: String,
+    //   enum: ['Fixed Price', 'Hourly'],
+    //   required: [true, 'Project type is required'],
+    // },
     hourlyRate: {
       type: Number,
       min: [0, 'Hourly rate cannot be negative'],

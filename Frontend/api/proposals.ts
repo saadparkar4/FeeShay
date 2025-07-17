@@ -25,9 +25,10 @@ export interface Proposal {
 }
 
 export interface CreateProposalData {
-  job: string;
-  cover_letter: string;
-  proposed_price: number;
+  job?: string;
+  cover_letter?: string;
+  deliverables?: string;
+  proposed_price?: number;
 }
 
 export interface ProposalResponse {

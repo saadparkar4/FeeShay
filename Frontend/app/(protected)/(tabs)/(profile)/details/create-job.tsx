@@ -26,7 +26,7 @@ interface FormData {
   budget_max: string;
   duration: string;
   skills: string[];
-  projectType: 'fixed' | 'hourly';
+  // projectType: 'fixed' | 'hourly';
   experienceLevel: 'entry' | 'intermediate' | 'expert';
 }
 
@@ -47,7 +47,7 @@ export default function CreateJobScreen() {
     budget_max: '',
     duration: '',
     skills: [],
-    projectType: 'fixed',
+    // projectType: 'fixed',
     experienceLevel: 'intermediate',
   });
 
@@ -148,10 +148,10 @@ export default function CreateJobScreen() {
     setLoading(true);
     try {
       // Map form data to match backend expectations
-      const projectTypeMap: { [key: string]: string } = {
-        'fixed': 'Fixed Price',
-        'hourly': 'Hourly'
-      };
+      // const projectTypeMap: { [key: string]: string } = {
+      //   'fixed': 'Fixed Price',
+      //   'hourly': 'Hourly'
+      // };
       
       const experienceLevelMap: { [key: string]: string } = {
         'entry': 'Entry',
@@ -168,13 +168,13 @@ export default function CreateJobScreen() {
         budget: parseFloat(formData.budget_max), // Using max as the main budget
         duration: formData.duration,
         skills: formData.skills,
-        projectType: projectTypeMap[formData.projectType],
+        // projectType: projectTypeMap[formData.projectType],
         experienceLevel: experienceLevelMap[formData.experienceLevel],
         status: 'open',
         visibility: 'public',
       };
 
-      const response = await jobsApi.createJob(jobData);
+      const response = await jobsApi.createJob(jobData as any);
       
       if (response.success) {
         Alert.alert('Success', 'Job posted successfully!', [
@@ -184,7 +184,7 @@ export default function CreateJobScreen() {
     } catch (error: any) {
       console.error('Job creation error:', error);
       console.error('Error response:', error.response?.data);
-      console.error('Request data sent:', jobData);
+      // console.error('Request data sent:', jobData);
       
       let errorMessage = 'Failed to create job';
       
@@ -328,7 +328,7 @@ export default function CreateJobScreen() {
             </View>
           </View>
 
-          <View style={styles.formSection}>
+          {/* <View style={styles.formSection}>
             <Text style={styles.label}>Project Type *</Text>
             <View style={styles.radioGroup}>
               <TouchableOpacity
@@ -354,7 +354,7 @@ export default function CreateJobScreen() {
                 <Text style={styles.radioText}>Hourly Rate</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </View> */}
 
           <View style={styles.formSection}>
             <Text style={styles.label}>Duration *</Text>

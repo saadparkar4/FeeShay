@@ -106,7 +106,7 @@ export default function TopBar() {
 			<View style={styles.rightSection}>
 				{/* Role switch button */}
 				<TouchableOpacity style={styles.roleSwitchBtn} onPress={() => setShowRoleModal(true)}>
-					<Ionicons name={userRole === "freelancer" ? "briefcase-outline" : "person-outline"} size={24} color={COLORS.textPrimary} />
+					<Ionicons name={userRole === "freelancer" ? "repeat" : "repeat"} size={24} color={COLORS.textPrimary} />
 				</TouchableOpacity>
 
 				{/* Notification bell with badge */}
@@ -128,7 +128,7 @@ export default function TopBar() {
 				onConfirm={handleRoleSwitch}
 				title="Switch Role"
 				message={`Are you sure you want to switch to ${userRole === "freelancer" ? "Client" : "Freelancer"} mode?`}
-				icon="swap-horizontal"
+				icon="repeat"
 				iconColors={[COLORS.accentTertiary, COLORS.accentSecondary]}
 				confirmText={`Switch to ${userRole === "freelancer" ? "Client" : "Freelancer"}`}
 				cancelText="Cancel"

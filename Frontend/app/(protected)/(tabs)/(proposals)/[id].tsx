@@ -16,7 +16,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '@/constants/Colors';
 import AuthContext from '@/context/AuthContext';
 import proposalApi, { Proposal } from '@/api/proposals';
-
+// Add this after imports
+const safeRender = (value: any) => {
+  if (typeof value === 'object' && value?.$numberDecimal) {
+    return parseFloat(value.$numberDecimal);
+  }
+  return value || 0;
+};
 type ProposalStatus = 'active' | 'completed' | 'cancelled' | 'rejected';
 
 export default function ProposalDetailsScreen() {
@@ -332,7 +338,7 @@ export default function ProposalDetailsScreen() {
           {coverLetterData.deliverables.length > 0 && (
             <>
               <Text style={styles.subheading}>What I'll deliver:</Text>
-              {coverLetterData.deliverables.map((item: any, index: any) => (
+              {coverLetterData.deliverables.map((item: any, index: number) => (
                 <View key={index} style={styles.deliverableItem}>
                   <Text style={styles.bullet}>•</Text>
                   <Text style={styles.deliverableText}>{item}</Text>
@@ -344,15 +350,15 @@ export default function ProposalDetailsScreen() {
           <View style={styles.budgetInfo}>
             <Text style={styles.subheading}>Budget Details:</Text>
             <Text style={styles.proposalText}>
-              Job Budget: {proposal.job.budget_min} - {proposal.job.budget_max} KD
+              Job Budget: {safeRender(proposal.job.budget_min)} - {safeRender(proposal.job.budget_max)} KD
             </Text>
             <Text style={styles.proposalText}>
-              My Proposal: {proposal.proposed_price} KD
+              My Proposal: {safeRender(proposal.proposed_price)} KD
             </Text>
           </View>
         </View>
 
-        {/* Service Information */}
+        {/* Service Information
         {coverLetterData.service && (
           <View style={[styles.card, styles.noteCard]}>
             <View style={styles.noteHeader}>
@@ -361,7 +367,7 @@ export default function ProposalDetailsScreen() {
             </View>
             <Text style={styles.noteText}>{coverLetterData.service}</Text>
           </View>
-        )}
+        )} */}
 
         {/* Action Buttons - Only show for active proposals */}
         {proposal.status === 'active' && (

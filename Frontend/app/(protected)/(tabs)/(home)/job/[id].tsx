@@ -131,7 +131,7 @@ export default function JobDetailsScreen() {
           })) || [],
           skills: job.skills || [],
           deliveryTime: job.duration || '5 days',
-          budgetType: job.projectType === 'Hourly' ? 'hourly' : 'fixed',
+          // budgetType: job.projectType === 'Hourly' ? 'hourly' : 'fixed',
           postedTime: getTimeAgo(job.created_at || new Date().toISOString()),
         };
         setJobData(transformedJob);

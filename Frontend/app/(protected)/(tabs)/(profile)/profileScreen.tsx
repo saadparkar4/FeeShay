@@ -260,7 +260,7 @@ export default function ProfileScreen() {
           onConfirm={handleConfirmRoleSwitch}
           title="Switch Role"
           message={`Are you sure you want to switch to ${userRole === 'freelancer' ? 'Client' : 'Freelancer'} mode?`}
-          icon="swap-horizontal"
+          icon="repeat"
           iconColors={[COLORS.accentTertiary, COLORS.accentSecondary]}
           confirmText={`Switch to ${userRole === 'freelancer' ? 'Client' : 'Freelancer'}`}
           cancelText="Cancel"

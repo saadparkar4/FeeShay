@@ -53,7 +53,7 @@ export default function SendProposalScreen() {
   ];
 
   const handleSendProposal = async () => {
-    if (!description || !budget) {
+    if (!projectTitle || !budget) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
@@ -141,33 +141,34 @@ Timeline: 5-7 business days
         style={styles.keyboardView}
       >
         <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
-          {/* Service Selection */}
+          {/* Service Selection
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Select Service</Text>
             <TouchableOpacity style={styles.dropdown}>
               <Text style={styles.dropdownText}>{selectedService}</Text>
               <Ionicons name="chevron-down" size={20} color={COLORS.accent} />
             </TouchableOpacity>
-          </View>
+          </View> */}
 
           {/* Project Details */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Project Details</Text>
+            <Text style={styles.sectionTitle}>Proposal Details</Text>
             
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.input}
-                placeholder="Enter project title"
+                placeholder="Enter Proposal Details /"
                 placeholderTextColor={COLORS.textSecondary}
                 value={projectTitle}
+                multiline
                 onChangeText={setProjectTitle}
               />
             </View>
 
-            <View style={styles.inputContainer}>
+            {/* <View style={styles.inputContainer}>
               <TextInput
                 style={[styles.input, styles.textArea]}
-                placeholder="Describe your project requirements in detail"
+                placeholder="Describe your proposal in detail"
                 placeholderTextColor={COLORS.textSecondary}
                 value={description}
                 onChangeText={setDescription}
@@ -175,12 +176,13 @@ Timeline: 5-7 business days
                 numberOfLines={4}
                 textAlignVertical="top"
               />
-            </View>
+            </View> */}
 
             <View style={styles.inputContainer}>
               <TextInput
                 style={[styles.input, styles.textArea]}
-                placeholder="List what you expect to receive"
+                placeholder="List what the client should expect to receive. 
+                Eg. Logo, PDF, Code Repo, etc."
                 placeholderTextColor={COLORS.textSecondary}
                 value={deliverables}
                 onChangeText={setDeliverables}
@@ -236,7 +238,7 @@ Timeline: 5-7 business days
             ))}
           </View>
 
-          {/* Proposal Summary */}
+          {/* Proposal Summary
           <View style={[styles.section, styles.summarySection]}>
             <Text style={styles.sectionTitle}>Proposal Summary</Text>
             <View style={styles.summaryRow}>
@@ -251,7 +253,7 @@ Timeline: 5-7 business days
               <Text style={styles.summaryLabel}>Estimated Delivery:</Text>
               <Text style={[styles.summaryValue, styles.deliveryText]}>5-7 business days</Text>
             </View>
-          </View>
+          </View> */}
 
           {/* Action Buttons */}
           <TouchableOpacity onPress={handleSendProposal} activeOpacity={0.8}>
