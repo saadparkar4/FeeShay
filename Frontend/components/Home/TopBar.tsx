@@ -9,7 +9,7 @@
 // ============================================================================
 
 import React, { useContext, useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/Colors";
 import AuthContext from "@/context/AuthContext";
@@ -19,6 +19,7 @@ import { getUnreadCount } from "@/api/messages";
 import notificationApi from "@/api/notifications";
 import socketService from "@/services/socketService";
 import { router } from "expo-router";
+import { authApi } from "@/api/auth";
 
 export default function TopBar() {
 	const { userRole, setUserRole, isAuthenticated } = useContext(AuthContext);
@@ -71,10 +72,26 @@ export default function TopBar() {
 		}
 	};
 
-	const handleRoleSwitch = () => {
-		const newRole = userRole === "freelancer" ? "client" : "freelancer";
-		setUserRole(newRole);
-		setShowRoleModal(false);
+	const handleRoleSwitch = async () => {
+		try {
+			const newRole = userRole === "freelancer" ? "client" : "freelancer";
+			
+			// Call API to switch role on backend
+			const response = await authApi.switchRole(newRole);
+			
+			if (response.success) {
+				// Update local state with new role
+				setUserRole(newRole);
+				setShowRoleModal(false);
+			}
+		} catch (error: any) {
+			console.error("Role switch error:", error);
+			Alert.alert(
+				"Error", 
+				error.response?.data?.message || "Failed to switch role. Please try again."
+			);
+			setShowRoleModal(false);
+		}
 	};
 
 	const handleNotificationPress = () => {

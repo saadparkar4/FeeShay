@@ -195,3 +195,67 @@ export const changePassword = asyncHandler(async (req: AuthRequest, res: Respons
         message: "Password changed successfully",
     });
 });
+
+export const switchRole = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+    const userId = req.user._id;
+    const { newRole } = req.body;
+
+    // Validate new role
+    if (!["freelancer", "client"].includes(newRole)) {
+        throw createError("Invalid role. Must be 'freelancer' or 'client'", 400);
+    }
+
+    // Get user
+    const user = await User.findById(userId);
+    if (!user) {
+        throw createError("User not found", 404);
+    }
+
+    // Check if user is already in the requested role
+    if (user.role === newRole) {
+        throw createError(`You are already a ${newRole}`, 400);
+    }
+
+    // Update user role
+    user.role = newRole;
+    await user.save();
+
+    // Check if profile exists for new role, create if not
+    if (newRole === "freelancer") {
+        const existingProfile = await FreelancerProfile.findOne({ user: userId });
+        if (!existingProfile) {
+            await FreelancerProfile.create({
+                user: userId,
+                name: user.email.split('@')[0], // Default name from email
+                member_since: new Date(),
+            });
+        }
+    } else {
+        const existingProfile = await ClientProfile.findOne({ user: userId });
+        if (!existingProfile) {
+            await ClientProfile.create({
+                user: userId,
+                name: user.email.split('@')[0], // Default name from email
+                client_since: new Date(),
+            });
+        }
+    }
+
+    // Generate new JWT token with updated role
+    const token = jwt.sign({ userId: user._id, email: user.email, role: newRole }, process.env.JWT_SECRET || "fallback-secret", {
+        expiresIn: process.env.JWT_EXPIRES_IN || "7d",
+    } as jwt.SignOptions);
+
+    res.json({
+        success: true,
+        message: `Successfully switched to ${newRole} role`,
+        data: {
+            user: {
+                id: user._id,
+                email: user.email,
+                role: newRole,
+            },
+            token,
+        },
+    });
+});

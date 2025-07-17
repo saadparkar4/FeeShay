@@ -12,7 +12,7 @@
  * and showcases their professional profile
  */
 
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -20,18 +20,25 @@ import {
   SafeAreaView,
   Text,
   TouchableOpacity,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { deleteToken } from '@/api/storage';
 import AuthContext from '@/context/AuthContext';
 import { COLORS } from '@/constants/Colors';
 import ConfirmationModal from '@/components/Common/ConfirmationModal';
+import { authApi } from '@/api/auth';
+import { jobsApi } from '@/api/jobs';
 // Profile component imports - each handles a specific section
 import UserInfoCard from '@/components/Profile/UserInfoCard';
 import ProfileDetails from '@/components/Profile/ProfileDetails';
 import PortfolioSection from '@/components/Profile/PortfolioSection';
 import ReviewsSection from '@/components/Profile/ReviewsSection';
 import SettingsSection from '@/components/Profile/SettingsSection';
+import ClientProfileDetails from '@/components/Profile/ClientProfileDetails';
+import ClientJobsSection from '@/components/Profile/ClientJobsSection';
+import EditProfileModal from '@/components/Profile/EditProfileModal';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function ProfileScreen() {
@@ -43,6 +50,15 @@ export default function ProfileScreen() {
   
   // State for role switching modal
   const [showRoleModal, setShowRoleModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [profileData, setProfileData] = useState<any>(null);
+  const [clientJobs, setClientJobs] = useState<any[]>([]);
+  const [clientStats, setClientStats] = useState({
+    jobsPosted: 0,
+    totalSpent: 0,
+    activeJobs: 0,
+  });
 
   // Handles user logout - clears token and updates auth state
   const handleLogout = () => {
@@ -70,11 +86,87 @@ export default function ProfileScreen() {
     setShowRoleModal(true);
   };
   
+  // Handler for editing profile
+  const handleEditProfile = () => {
+    setShowEditModal(true);
+  };
+  
   // Confirm role switch
-  const handleConfirmRoleSwitch = () => {
-    const newRole = userRole === 'freelancer' ? 'client' : 'freelancer';
-    setUserRole(newRole);
-    setShowRoleModal(false);
+  const handleConfirmRoleSwitch = async () => {
+    try {
+      const newRole = userRole === 'freelancer' ? 'client' : 'freelancer';
+      
+      // Call API to switch role on backend
+      const response = await authApi.switchRole(newRole);
+      
+      if (response.success) {
+        // Update local state with new role
+        setUserRole(newRole);
+        setShowRoleModal(false);
+      }
+    } catch (error: any) {
+      console.error("Role switch error:", error);
+      Alert.alert(
+        "Error", 
+        error.response?.data?.message || "Failed to switch role. Please try again."
+      );
+      setShowRoleModal(false);
+    }
+  };
+
+  // Fetch profile data
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchProfileData();
+    } else {
+      setLoading(false);
+    }
+  }, [isAuthenticated, userRole]);
+
+  const fetchProfileData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch profile
+      const profileResponse = await authApi.getProfile();
+      setProfileData(profileResponse.data);
+      
+      // If client, fetch additional data
+      if (userRole === 'client') {
+        try {
+          // Fetch client's jobs
+          const jobsResponse = await jobsApi.getMyJobs();
+          // Extract jobs array from the response
+          const jobs = jobsResponse.data?.jobs || jobsResponse.jobs || [];
+          
+          // Ensure jobs is an array
+          const jobsArray = Array.isArray(jobs) ? jobs : [];
+          setClientJobs(jobsArray);
+          
+          // Calculate stats
+          const stats = {
+            jobsPosted: jobsArray.length,
+            totalSpent: jobsArray.reduce((sum: number, job: any) => {
+              // Calculate based on completed jobs with actual spend
+              if (job.status === 'completed' && job.actual_spend) {
+                return sum + Number(job.actual_spend);
+              }
+              return sum;
+            }, 0),
+            activeJobs: jobsArray.filter((job: any) => job.status === 'open' || job.status === 'in_progress').length,
+          };
+          setClientStats(stats);
+        } catch (error) {
+          console.error('Failed to fetch client jobs:', error);
+          // Set empty array on error
+          setClientJobs([]);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch profile data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle sign in navigation for guests
@@ -104,33 +196,60 @@ export default function ProfileScreen() {
     );
   }
 
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: 'white' }]}>
+        <View style={[styles.container, styles.loadingContainer]}>
+          <ActivityIndicator size="large" color={COLORS.accent} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: 'white' }]}>
       <View style={styles.container}>
         {/* Main scrollable content */}
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* User info card - Avatar, name, stats */}
-          <UserInfoCard onSwitchRole={handleSwitchRole} />
-          
-          {/* Profile details - Bio, skills, location */}
-          <ProfileDetails />
-          
-          {/* Portfolio section - Showcases user's work */}
-          {/* TODO: Navigate to full portfolio */}
-          {/* TODO: Open add portfolio modal */}
-          <PortfolioSection 
-            onViewAll={() => console.log('View all portfolio')}
-            onAddPortfolio={() => console.log('Add portfolio item')}
+          <UserInfoCard 
+            onSwitchRole={handleSwitchRole}
+            onEditProfile={handleEditProfile}
+            profile={profileData?.profile}
+            user={profileData?.user}
           />
           
-          {/* Reviews section - User ratings and feedback */}
-          {/* TODO: Navigate to reviews */}
-          <ReviewsSection onViewAll={() => console.log('View all reviews')} />
+          {userRole === 'freelancer' ? (
+            <>
+              {/* Freelancer-specific components */}
+              <ProfileDetails profile={profileData?.profile} />
+              
+              <PortfolioSection 
+                onViewAll={() => console.log('View all portfolio')}
+                onAddPortfolio={() => console.log('Add portfolio item')}
+              />
+              
+              <ReviewsSection onViewAll={() => console.log('View all reviews')} />
+            </>
+          ) : (
+            <>
+              {/* Client-specific components */}
+              <ClientProfileDetails 
+                profile={profileData?.profile}
+                stats={clientStats}
+              />
+              
+              <ClientJobsSection jobs={clientJobs} />
+              
+              <ReviewsSection onViewAll={() => console.log('View all reviews')} />
+            </>
+          )}
           
           {/* Settings section - Account options and navigation */}
           <SettingsSection 
             onNavigate={handleNavigate}
             onLogout={handleLogout}
+            userRole={userRole}
           />
         </ScrollView>
         
@@ -146,6 +265,15 @@ export default function ProfileScreen() {
           confirmText={`Switch to ${userRole === 'freelancer' ? 'Client' : 'Freelancer'}`}
           cancelText="Cancel"
         />
+        
+        {/* Edit Profile Modal */}
+        <EditProfileModal
+          visible={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          profile={profileData?.profile}
+          user={profileData?.user}
+          onUpdate={fetchProfileData}
+        />
       </View>
     </SafeAreaView>
   );
@@ -157,6 +285,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,  // Uses app theme background color
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   // Guest container - centered content for non-authenticated users
   guestContainer: {

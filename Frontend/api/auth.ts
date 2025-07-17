@@ -1,5 +1,5 @@
 import apiClient from "./index";
-import { storeToken, deleteToken } from "./storage";
+import { storeToken, deleteToken, storeUserRole } from "./storage";
 
 interface LoginData {
   email: string;
@@ -36,6 +36,7 @@ export const authApi = {
       
       if (response.data.data.token) {
         await storeToken(response.data.data.token);
+        await storeUserRole(response.data.data.user.role);
       }
       
       return response.data;
@@ -53,6 +54,7 @@ export const authApi = {
       
       if (response.data.data.token) {
         await storeToken(response.data.data.token);
+        await storeUserRole(response.data.data.user.role);
       }
       
       return response.data;
@@ -105,6 +107,24 @@ export const authApi = {
       const response = await apiClient.post("/auth/forgot-password", { email });
       return response.data;
     } catch (error: any) {
+      throw error;
+    }
+  },
+
+  switchRole: async (newRole: "client" | "freelancer") => {
+    try {
+      console.log("Switching role to:", newRole);
+      const response = await apiClient.post<AuthResponse>("/auth/switch-role", { newRole });
+      console.log("Switch role response:", response.data);
+      
+      if (response.data.data.token) {
+        await storeToken(response.data.data.token);
+        await storeUserRole(response.data.data.user.role);
+      }
+      
+      return response.data;
+    } catch (error: any) {
+      console.error("Switch role error details:", error.response?.data || error.message);
       throw error;
     }
   },

@@ -3,26 +3,32 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/Colors';
 
-export default function ProfileDetails() {
+interface ProfileDetailsProps {
+  profile?: any;
+}
+
+export default function ProfileDetails({ profile }: ProfileDetailsProps) {
+  const bio = profile?.bio || 'No bio added yet. Tell us about yourself!';
+  const skills = profile?.skills || ['React Native', 'TypeScript', 'UI/UX', 'Node.js'];
+  const location = profile?.location || 'Location not set';
+  const memberSince = profile?.member_since ? new Date(profile.member_since).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Recently';
+  const languages = profile?.languages || ['English'];
+  
+  const skillColors = [COLORS.accent, COLORS.accentSecondary, COLORS.accentTertiary];
+  
   return (
     <View style={styles.detailsCard}>
-      <Text style={styles.bio}>
-        Creative graphic designer with 5+ years of experience specializing in brand identity and digital illustrations. Passionate about turning ideas into visual stories. 🎨
-      </Text>
+      <Text style={styles.bio}>{bio}</Text>
       
       <View style={styles.skillsContainer}>
-        <View style={[styles.skillTag, { backgroundColor: `${COLORS.accent}20` }]}>
-          <Text style={[styles.skillText, { color: COLORS.accent }]}>UI/UX Design</Text>
-        </View>
-        <View style={[styles.skillTag, { backgroundColor: `${COLORS.accentSecondary}20` }]}>
-          <Text style={[styles.skillText, { color: COLORS.accentSecondary }]}>Branding</Text>
-        </View>
-        <View style={[styles.skillTag, { backgroundColor: `${COLORS.accentTertiary}20` }]}>
-          <Text style={[styles.skillText, { color: COLORS.accentTertiary }]}>Illustration</Text>
-        </View>
-        <View style={[styles.skillTag, { backgroundColor: `${COLORS.accent}20` }]}>
-          <Text style={[styles.skillText, { color: COLORS.accent }]}>Logo Design</Text>
-        </View>
+        {skills.map((skill: string, index: number) => {
+          const color = skillColors[index % skillColors.length];
+          return (
+            <View key={index} style={[styles.skillTag, { backgroundColor: `${color}20` }]}>
+              <Text style={[styles.skillText, { color }]}>{skill}</Text>
+            </View>
+          );
+        })}
       </View>
       
       <View style={styles.infoContainer}>
@@ -30,21 +36,21 @@ export default function ProfileDetails() {
           <View style={[styles.iconContainer, { backgroundColor: `${COLORS.accent}10` }]}>
             <Ionicons name="location" size={16} color={COLORS.accent} />
           </View>
-          <Text style={styles.infoText}>New York, USA</Text>
+          <Text style={styles.infoText}>{location}</Text>
         </View>
         
         <View style={styles.infoRow}>
           <View style={[styles.iconContainer, { backgroundColor: `${COLORS.accentSecondary}10` }]}>
             <Ionicons name="calendar" size={16} color={COLORS.accentSecondary} />
           </View>
-          <Text style={styles.infoText}>Member since June 2022</Text>
+          <Text style={styles.infoText}>Member since {memberSince}</Text>
         </View>
         
         <View style={styles.infoRow}>
           <View style={[styles.iconContainer, { backgroundColor: `${COLORS.accentTertiary}10` }]}>
             <Ionicons name="globe" size={16} color={COLORS.accentTertiary} />
           </View>
-          <Text style={styles.infoText}>English, Spanish</Text>
+          <Text style={styles.infoText}>{languages.join(', ')}</Text>
         </View>
       </View>
     </View>

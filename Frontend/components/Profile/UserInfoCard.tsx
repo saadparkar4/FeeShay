@@ -7,19 +7,26 @@ import AuthContext from '@/context/AuthContext';
 
 interface UserInfoCardProps {
   onSwitchRole?: () => void;
+  onEditProfile?: () => void;
+  profile?: any;
+  user?: any;
 }
 
-export default function UserInfoCard({ onSwitchRole }: UserInfoCardProps) {
+export default function UserInfoCard({ onSwitchRole, onEditProfile, profile, user }: UserInfoCardProps) {
   const { userRole } = useContext(AuthContext);
   
   const handleSwitchRole = () => {
     onSwitchRole?.();
   };
+  
+  const userName = profile?.name || user?.email?.split('@')[0] || 'User';
+  const avatar = profile?.profile_image_url || 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg';
+  
   return (
     <View style={styles.userCard}>
       <View style={styles.avatarContainer}>
         <Image
-          source={{ uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg' }}
+          source={{ uri: avatar }}
           style={styles.avatar}
         />
         <TouchableOpacity style={styles.cameraButton}>
@@ -32,7 +39,7 @@ export default function UserInfoCard({ onSwitchRole }: UserInfoCardProps) {
         </TouchableOpacity>
       </View>
       
-      <Text style={styles.userName}>Sarah Johnson</Text>
+      <Text style={styles.userName}>{userName}</Text>
       
       
       <LinearGradient
@@ -47,17 +54,24 @@ export default function UserInfoCard({ onSwitchRole }: UserInfoCardProps) {
         </Text>
       </LinearGradient>
       
-      <TouchableOpacity style={styles.switchButton} onPress={handleSwitchRole}>
-        <LinearGradient
-          colors={[COLORS.accentTertiary, COLORS.accentSecondary]}
-          style={styles.switchGradient}
-        >
-          <Ionicons name="repeat" size={16} color="white" />
-          <Text style={styles.switchText}>
-            Switch to {userRole === 'freelancer' ? 'Client' : 'Freelancer'}
-          </Text>
-        </LinearGradient>
-      </TouchableOpacity>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.editButton} onPress={onEditProfile}>
+          <Ionicons name="pencil" size={18} color={COLORS.accent} />
+          <Text style={styles.editButtonText}>Edit Profile</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.switchButton} onPress={handleSwitchRole}>
+          <LinearGradient
+            colors={[COLORS.accentTertiary, COLORS.accentSecondary]}
+            style={styles.switchGradient}
+          >
+            <Ionicons name="repeat" size={16} color="white" />
+            <Text style={styles.switchText}>
+              Switch to {userRole === 'freelancer' ? 'Client' : 'Freelancer'}
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -133,8 +147,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  switchButton: {
+  buttonContainer: {
+    width: '100%',
+    gap: 12,
     marginTop: 8,
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.accent + '15',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+    gap: 8,
+  },
+  editButtonText: {
+    color: COLORS.accent,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  switchButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+
   },
   switchGradient: {
     flexDirection: 'row',

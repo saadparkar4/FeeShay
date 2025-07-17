@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, login, getProfile, updateProfile, changePassword } from "../controllers/authController";
+import { register, login, getProfile, updateProfile, changePassword, switchRole } from "../controllers/authController";
 import { validateUserRegistration, validateUserLogin, validateProfileUpdate } from "../middlewares/validation";
 import { authenticateToken } from "../middlewares/auth";
 
@@ -13,5 +13,6 @@ router.post("/login", validateUserLogin, login);
 router.get("/profile", authenticateToken, getProfile);
 router.put("/profile", authenticateToken, validateProfileUpdate, updateProfile);
 router.put("/change-password", authenticateToken, changePassword);
+router.post("/switch-role", authenticateToken, switchRole);
 
 export default router;

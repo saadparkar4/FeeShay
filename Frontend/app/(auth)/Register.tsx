@@ -8,7 +8,7 @@ import AuthContext from "../../context/AuthContext";
 import { useMutation } from "@tanstack/react-query";
 import LogoImage from "@/components/Home/Logo";
 
-type UserRole = "freelancer" | "client" | "both";
+type UserRole = "freelancer" | "client";
 
 export default function RegisterScreen() {
 	// Context
@@ -222,7 +222,7 @@ export default function RegisterScreen() {
 
 						{/* Role Selection */}
 						<View style={styles.roleSection}>
-							<Text style={styles.roleLabel}>I want to:</Text>
+							<Text style={styles.roleLabel}>I want to be a:</Text>
 							<View style={styles.roleButtons}>
 								<TouchableOpacity
 									style={[styles.roleButton, role === "freelancer" && styles.roleButtonActive]}
@@ -232,7 +232,7 @@ export default function RegisterScreen() {
 									}}
 									disabled={isPending}>
 									<Ionicons name="briefcase-outline" size={20} color={role === "freelancer" ? COLORS.background : COLORS.textSecondary} />
-									<Text style={[styles.roleButtonText, role === "freelancer" && styles.roleButtonTextActive]}>Work</Text>
+									<Text style={[styles.roleButtonText, role === "freelancer" && styles.roleButtonTextActive]}>Freelancer</Text>
 								</TouchableOpacity>
 
 								<TouchableOpacity
@@ -243,18 +243,7 @@ export default function RegisterScreen() {
 									}}
 									disabled={isPending}>
 									<Ionicons name="people-outline" size={20} color={role === "client" ? COLORS.background : COLORS.textSecondary} />
-									<Text style={[styles.roleButtonText, role === "client" && styles.roleButtonTextActive]}>Hire</Text>
-								</TouchableOpacity>
-
-								<TouchableOpacity
-									style={[styles.roleButton, role === "both" && styles.roleButtonActive]}
-									onPress={() => {
-										setRole("both");
-										clearError("role");
-									}}
-									disabled={isPending}>
-									<Ionicons name="git-merge-outline" size={20} color={role === "both" ? COLORS.background : COLORS.textSecondary} />
-									<Text style={[styles.roleButtonText, role === "both" && styles.roleButtonTextActive]}>Both</Text>
+									<Text style={[styles.roleButtonText, role === "client" && styles.roleButtonTextActive]}>Client</Text>
 								</TouchableOpacity>
 							</View>
 							{errors.role && <Text style={styles.errorText}>{errors.role}</Text>}
@@ -394,7 +383,7 @@ const styles = StyleSheet.create({
 	},
 	roleButtons: {
 		flexDirection: "row",
-		gap: 12,
+		gap: 16,
 	},
 	roleButton: {
 		flex: 1,

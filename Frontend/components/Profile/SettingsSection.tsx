@@ -14,18 +14,29 @@ interface SettingItem {
 interface SettingsSectionProps {
   onNavigate?: (route: string) => void;
   onLogout?: () => void;
+  userRole?: string;
 }
 
-const settingsItems: SettingItem[] = [
-  { icon: 'briefcase', text: 'My Services', color: COLORS.accent, route: 'services' },
-  { icon: 'list', text: 'My Job Posts', color: COLORS.accentSecondary, route: 'jobs' },
-  { icon: 'card', text: 'Payment Settings', color: COLORS.accentTertiary, route: 'payment' },
-  { icon: 'notifications', text: 'Notifications Settings', color: COLORS.accent, route: 'notifications' },
-  { icon: 'globe', text: 'Language & Currency', color: COLORS.accentSecondary, route: 'language' },
-  { icon: 'log-out', text: 'Logout', color: COLORS.error, route: 'logout', isLogout: true },
-];
+export default function SettingsSection({ onNavigate, onLogout, userRole = 'freelancer' }: SettingsSectionProps) {
+  const freelancerItems: SettingItem[] = [
+    { icon: 'briefcase', text: 'My Services', color: COLORS.accent, route: 'services' },
+    { icon: 'document-text', text: 'My Proposals', color: COLORS.accentSecondary, route: 'proposals' },
+    { icon: 'card', text: 'Payment Settings', color: COLORS.accentTertiary, route: 'payment' },
+    { icon: 'notifications', text: 'Notifications Settings', color: COLORS.accent, route: 'notifications' },
+    { icon: 'globe', text: 'Language & Currency', color: COLORS.accentSecondary, route: 'language' },
+    { icon: 'log-out', text: 'Logout', color: COLORS.error, route: 'logout', isLogout: true },
+  ];
 
-export default function SettingsSection({ onNavigate, onLogout }: SettingsSectionProps) {
+  const clientItems: SettingItem[] = [
+    { icon: 'list', text: 'My Job Posts', color: COLORS.accent, route: 'jobs' },
+    { icon: 'people', text: 'Hired Freelancers', color: COLORS.accentSecondary, route: 'hired' },
+    { icon: 'card', text: 'Payment Settings', color: COLORS.accentTertiary, route: 'payment' },
+    { icon: 'notifications', text: 'Notifications Settings', color: COLORS.accent, route: 'notifications' },
+    { icon: 'globe', text: 'Language & Currency', color: COLORS.accentSecondary, route: 'language' },
+    { icon: 'log-out', text: 'Logout', color: COLORS.error, route: 'logout', isLogout: true },
+  ];
+
+  const settingsItems = userRole === 'client' ? clientItems : freelancerItems;
   const handlePress = (item: SettingItem) => {
     if (item.isLogout) {
       onLogout?.();
