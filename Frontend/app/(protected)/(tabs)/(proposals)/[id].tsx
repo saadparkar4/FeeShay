@@ -123,14 +123,8 @@ export default function ProposalDetailsScreen() {
       case 'cancelled':
         return {
           text: 'Cancelled',
-          color: '#6B7280',
-          bgColor: '#6B728020',
-        };
-      case 'active':
-        return {
-          text: 'Pending',
-          color: COLORS.accent,
-          bgColor: COLORS.accent + '20',
+          color: '#EF4444',
+          bgColor: '#EF444420',
         };
       default:
         return null;
@@ -284,7 +278,7 @@ export default function ProposalDetailsScreen() {
                 <Text style={styles.metricLabel}>Proposed Price</Text>
               </View>
               <Text style={[styles.metricValue, { color: COLORS.accent }]}>
-                {parseFloat(proposal.proposed_price?.$numberDecimal || proposal.proposed_price || 0)} KD
+                {proposal.proposed_price} KD
               </Text>
             </View>
           </View>
@@ -338,7 +332,7 @@ export default function ProposalDetailsScreen() {
           {coverLetterData.deliverables.length > 0 && (
             <>
               <Text style={styles.subheading}>What I'll deliver:</Text>
-              {coverLetterData.deliverables.map((item, index) => (
+              {coverLetterData.deliverables.map((item: any, index: any) => (
                 <View key={index} style={styles.deliverableItem}>
                   <Text style={styles.bullet}>•</Text>
                   <Text style={styles.deliverableText}>{item}</Text>
@@ -350,10 +344,10 @@ export default function ProposalDetailsScreen() {
           <View style={styles.budgetInfo}>
             <Text style={styles.subheading}>Budget Details:</Text>
             <Text style={styles.proposalText}>
-              Job Budget: {parseFloat(proposal.job.budget_min?.$numberDecimal || proposal.job.budget_min || 0)} - {parseFloat(proposal.job.budget_max?.$numberDecimal || proposal.job.budget_max || 0)} KD
+              Job Budget: {proposal.job.budget_min} - {proposal.job.budget_max} KD
             </Text>
             <Text style={styles.proposalText}>
-              My Proposal: {parseFloat(proposal.proposed_price?.$numberDecimal || proposal.proposed_price || 0)} KD
+              My Proposal: {proposal.proposed_price} KD
             </Text>
           </View>
         </View>

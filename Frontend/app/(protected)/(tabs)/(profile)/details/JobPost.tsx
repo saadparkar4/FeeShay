@@ -291,7 +291,7 @@ export default function JobPostScreen() {
           status: job.status || 'open',
           timeAgo: getTimeAgo(job.created_at),
         }));
-        setJobs(transformedJobs);
+        setJobs(transformedJobs as JobPostData[]);
       }
     } catch (error) {
       console.error('Failed to fetch jobs:', error);
