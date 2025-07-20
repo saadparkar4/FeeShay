@@ -536,13 +536,6 @@ We welcome contributions! Please follow these steps:
 
 ### Development Guidelines
 
--   Ali Al Shammari
--   Haider Kamal
--   Mohammad Al Osaimi
--   Saad Abdul Hamid Parkar
-
-### Development Guidelines
-
 -   Follow TypeScript best practices
 -   Write meaningful commit messages
 -   Add tests for new features
@@ -552,7 +545,7 @@ We welcome contributions! Please follow these steps:
 ## 📱 Screenshots
 
 <div align="center">
-  <img src="Screenshots/onboarding.png" alt="Onboarding" width="200"/>
+  <img src="/Screenshots/onboarding.png" alt="Onboarding" width="200"/>
   <img src="Screenshots/home.png" alt="Home Screen" width="200"/>
   <img src="Screenshots/profile.png" alt="Profile" width="200"/>
   <img src="Screenshots/messaging.png" alt="Messaging" width="200"/>
@@ -606,6 +599,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 -   **Discord**: [Join our Discord](https://discord.gg/feeshay)
 
 ---
+
+### Developers
+
+-   Ali Al Shammari
+-   Haider Kamal
+-   Mohammad Al Osaimi
+-   Saad Abdul Hamid Parkar
 
 <div align="center">
   <strong>Built with ❤️ by the FeeShay Team</strong>
