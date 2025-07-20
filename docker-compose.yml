@@ -1,0 +1,253 @@
+# =============================================================================
+# FeeShay Full Stack Docker Compose Configuration
+# =============================================================================
+# This file orchestrates the complete FeeShay application stack including:
+# - MongoDB database
+# - Redis cache (optional)
+# - Backend API server
+# - Nginx reverse proxy
+# - MongoDB Express (development only)
+# =============================================================================
+
+version: "3.8"
+
+# =============================================================================
+# SERVICES CONFIGURATION
+# =============================================================================
+services:
+    # MongoDB Database
+    mongodb:
+        image: mongo:6.0
+        container_name: feeshay-mongo
+        restart: unless-stopped
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-admin}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-password123}
+            MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-feeshay}
+        ports:
+            - "${MONGO_PORT:-27017}:27017"
+        volumes:
+            - mongodb_data:/data/db
+            - mongodb_config:/data/configdb
+            - ./Backend/scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+        networks:
+            - feeshay-network
+        healthcheck:
+            test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 40s
+
+    # Redis Cache (Optional)
+    redis:
+        image: redis:7-alpine
+        container_name: feeshay-redis
+        restart: unless-stopped
+        ports:
+            - "${REDIS_PORT:-6379}:6379"
+        volumes:
+            - redis_data:/data
+        networks:
+            - feeshay-network
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+        command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
+
+    # Backend API Server
+    backend:
+        build:
+            context: ./Backend
+            dockerfile: Dockerfile
+        container_name: feeshay-backend
+        restart: unless-stopped
+        environment:
+            # Database Configuration
+            NODE_ENV: ${NODE_ENV:-production}
+            MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-password123}@mongodb:27017/${MONGO_DATABASE:-feeshay}?authSource=admin
+
+            # Application Configuration
+            PORT: 3000
+            JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-change-this-in-production}
+            JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+
+            # CORS Configuration
+            CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:19006}
+            SOCKET_CORS_ORIGIN: ${SOCKET_CORS_ORIGIN:-http://localhost:19006}
+
+            # File Upload Configuration
+            MAX_FILE_SIZE: ${MAX_FILE_SIZE:-5242880}
+            UPLOAD_PATH: uploads
+
+            # Redis Configuration (Optional)
+            REDIS_URL: redis://:${REDIS_PASSWORD:-redis123}@redis:6379
+
+            # Security Configuration
+            BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
+            RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+            RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
+
+            # Logging Configuration
+            LOG_LEVEL: ${LOG_LEVEL:-info}
+            LOG_CONSOLE: true
+        ports:
+            - "${BACKEND_PORT:-3000}:3000"
+        volumes:
+            - uploads_data:/app/uploads
+            - logs_data:/app/logs
+        depends_on:
+            mongodb:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        networks:
+            - feeshay-network
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+
+    # Nginx Reverse Proxy
+    nginx:
+        image: nginx:alpine
+        container_name: feeshay-nginx
+        restart: unless-stopped
+        ports:
+            - "${HTTP_PORT:-80}:80"
+            - "${HTTPS_PORT:-443}:443"
+        volumes:
+            - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+            - ./nginx/conf.d:/etc/nginx/conf.d:ro
+            - ./ssl:/etc/nginx/ssl:ro
+            - uploads_data:/var/www/uploads:ro
+        depends_on:
+            backend:
+                condition: service_healthy
+        networks:
+            - feeshay-network
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+
+    # MongoDB Express (Development only)
+    mongo-express:
+        image: mongo-express:latest
+        container_name: feeshay-mongo-express
+        restart: unless-stopped
+        environment:
+            ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ROOT_USERNAME:-admin}
+            ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD:-password123}
+            ME_CONFIG_MONGODB_URL: mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-password123}@mongodb:27017/
+            ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USERNAME:-admin}
+            ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD:-admin123}
+        ports:
+            - "${MONGO_EXPRESS_PORT:-8081}:8081"
+        depends_on:
+            mongodb:
+                condition: service_healthy
+        networks:
+            - feeshay-network
+        profiles:
+            - development # Only start in development mode
+
+# =============================================================================
+# NETWORKS CONFIGURATION
+# =============================================================================
+networks:
+    feeshay-network:
+        driver: bridge
+        ipam:
+            config:
+                - subnet: 172.20.0.0/16
+
+# =============================================================================
+# VOLUMES CONFIGURATION
+# =============================================================================
+volumes:
+    # Database volumes
+    mongodb_data:
+        driver: local
+        driver_opts:
+            type: none
+            o: bind
+            device: ./data/mongodb
+
+    mongodb_config:
+        driver: local
+        driver_opts:
+            type: none
+            o: bind
+            device: ./data/mongodb-config
+
+    redis_data:
+        driver: local
+        driver_opts:
+            type: none
+            o: bind
+            device: ./data/redis
+
+    # Application volumes
+    uploads_data:
+        driver: local
+        driver_opts:
+            type: none
+            o: bind
+            device: ./data/uploads
+
+    logs_data:
+        driver: local
+        driver_opts:
+            type: none
+            o: bind
+            device: ./data/logs
+# =============================================================================
+# DEVELOPMENT CONFIGURATION
+# =============================================================================
+# For development, create a docker-compose.override.yml file:
+#
+# version: '3.8'
+# services:
+#   backend:
+#     build:
+#       target: development
+#     volumes:
+#       - ./Backend:/app
+#       - /app/node_modules
+#     environment:
+#       NODE_ENV: development
+#       DETAILED_ERRORS: true
+#     command: npm run dev
+#
+# =============================================================================
+# USAGE INSTRUCTIONS
+# =============================================================================
+#
+# Development mode:
+# docker-compose --profile development up -d
+#
+# Production mode:
+# docker-compose up -d
+#
+# View logs:
+# docker-compose logs -f [service-name]
+#
+# Stop services:
+# docker-compose down
+#
+# Remove everything including volumes:
+# docker-compose down -v --remove-orphans
+#
+# Build and start:
+# docker-compose up -d --build
+#
+# Scale backend service:
+# docker-compose up -d --scale backend=3
+#
+# =============================================================================
