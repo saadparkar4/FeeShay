@@ -35,7 +35,7 @@ class SocketService {
                 }
 
                 const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
-                socket.data.userId = decoded.id;
+                socket.data.userId = decoded.userId;
                 next();
             } catch (err) {
                 next(new Error("Authentication error"));
@@ -110,7 +110,7 @@ class SocketService {
 
                     // Send notification to the other user if they're not in the chat room
                     const otherUserId = chat.user1.toString() === userId ? chat.user2.toString() : chat.user1.toString();
-                    
+
                     // Create notification for the other user
                     const notification = await Notification.create({
                         user: otherUserId,
@@ -125,7 +125,6 @@ class SocketService {
                         notification: notification.toObject(),
                         unreadCount: await this.getUnreadMessageCount(otherUserId),
                     });
-
                 } catch (error) {
                     console.error("Error sending message:", error);
                     socket.emit("error", { message: "Failed to send message" });
@@ -162,7 +161,6 @@ class SocketService {
                     // Update unread count for current user
                     const unreadCount = await this.getUnreadMessageCount(userId);
                     socket.emit("unread_count_update", { unreadCount });
-
                 } catch (error) {
                     console.error("Error marking messages as read:", error);
                 }

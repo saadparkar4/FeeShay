@@ -1,6 +1,7 @@
 import { getToken } from "./storage";
+import apiClient from "./index";
 
-const API_URL = (process.env.EXPO_PUBLIC_API_URL || "http://192.168.6.37:3000/api/v1");
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://192.168.6.37:3000/api/v1";
 
 interface ApiResponse<T = any> {
     success: boolean;
@@ -96,11 +97,7 @@ export const getMyChats = async (page = 1, limit = 10): Promise<ApiResponse<{ ch
 };
 
 // Get messages in a chat
-export const getChatMessages = async (
-    chatId: string,
-    page = 1,
-    limit = 50
-): Promise<ApiResponse<{ messages: Message[]; pagination: PaginationInfo }>> => {
+export const getChatMessages = async (chatId: string, page = 1, limit = 50): Promise<ApiResponse<{ messages: Message[]; pagination: PaginationInfo }>> => {
     try {
         const token = await getToken();
         const response = await fetch(`${API_URL}/messages/chats/${chatId}/messages?page=${page}&limit=${limit}`, {
@@ -183,6 +180,7 @@ export const markMessagesAsRead = async (chatId: string): Promise<ApiResponse> =
 export const getUnreadCount = async (): Promise<ApiResponse<{ unreadCount: number }>> => {
     try {
         const token = await getToken();
+
         const response = await fetch(`${API_URL}/messages/unread-count`, {
             method: "GET",
             headers: {
