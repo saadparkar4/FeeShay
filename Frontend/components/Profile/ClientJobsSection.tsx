@@ -172,14 +172,13 @@ const ClientJobsSection: React.FC<ClientJobsSectionProps> = ({ jobs = [] }) => {
 
 const styles = StyleSheet.create({
     container: {
-        marginTop: 16,
+        marginTop: 20,
     },
     header: {
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
         marginHorizontal: 20,
-        marginBottom: 16,
     },
     sectionTitle: {
         fontSize: 18,
@@ -200,7 +199,7 @@ const styles = StyleSheet.create({
         color: COLORS.background,
     },
     jobsList: {
-        paddingLeft: 20,
+        padding: 20,
     },
     jobCard: {
         backgroundColor: COLORS.background,
