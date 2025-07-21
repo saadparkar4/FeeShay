@@ -16,7 +16,7 @@ export const handleValidationErrors = (req: Request, res: Response, next: NextFu
 // User validation rules
 export const validateUserRegistration = [
     body("email").isEmail().normalizeEmail().withMessage("Valid email is required"),
-    body("password").isLength({ min: 6 }).withMessage("Password must be at least 6 characters"),
+    body("password").isLength({ min: 8 }).withMessage("Password must be at least 8 characters"),
     body("role").isIn(["freelancer", "client"]).withMessage("Role must be freelancer or client"),
     handleValidationErrors,
 ];
@@ -95,7 +95,7 @@ export const validateMongoId = [param("id").isMongoId().withMessage("Valid ID is
 // Chat ID validation
 export const validateChatId = [param("chatId").isMongoId().withMessage("Valid chat ID is required"), handleValidationErrors];
 
-// Message ID validation  
+// Message ID validation
 export const validateMessageId = [param("messageId").isMongoId().withMessage("Valid message ID is required"), handleValidationErrors];
 
 // Pagination validation

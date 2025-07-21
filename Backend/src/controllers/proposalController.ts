@@ -39,6 +39,7 @@ export const createProposal = asyncHandler(async (req: AuthRequest, res: Respons
         job: jobId,
         freelancer: freelancerProfile._id,
         cover_letter,
+
         proposed_price,
         created_at: new Date(),
         updated_at: new Date(),

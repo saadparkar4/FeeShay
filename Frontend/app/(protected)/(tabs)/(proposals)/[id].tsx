@@ -237,13 +237,13 @@ export default function ProposalDetailsScreen() {
                     </View>
 
                     <View style={styles.metricsRow}>
-                        <View style={[styles.metricCard, { backgroundColor: COLORS.accentTertiary + "20" }]}>
+                        {/* <View style={[styles.metricCard, { backgroundColor: COLORS.accentTertiary + "20" }]}>
                             <View style={styles.metricHeader}>
                                 <Ionicons name="time" size={16} color={COLORS.accentTertiary} />
                                 <Text style={styles.metricLabel}>Timeline</Text>
                             </View>
                             <Text style={[styles.metricValue, { color: COLORS.accentTertiary }]}>{coverLetterData.timeline || "5-7 days"}</Text>
-                        </View>
+                        </View> */}
 
                         <View style={[styles.metricCard, { backgroundColor: COLORS.accent + "20" }]}>
                             <View style={styles.metricHeader}>

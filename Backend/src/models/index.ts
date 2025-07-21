@@ -55,6 +55,8 @@ const JobSchema = new Schema({
     category: { type: Types.ObjectId, ref: "Category" },
     budget_min: { type: Number },
     budget_max: { type: Number },
+    duration: { type: String },
+    skills: [{ type: String }],
     is_internship: { type: Boolean, default: false },
     status: { type: String, enum: ["open", "in_progress", "completed", "cancelled"], default: "open" },
     created_at: { type: Date, default: Date.now },
@@ -82,6 +84,7 @@ const ProposalSchema = new Schema({
     job: { type: Types.ObjectId, ref: "Job", required: true },
     freelancer: { type: Types.ObjectId, ref: "FreelancerProfile", required: true },
     cover_letter: { type: String },
+
     proposed_price: { type: Number },
     status: { type: String, enum: ["active", "completed", "cancelled", "rejected"], default: "active" },
     created_at: { type: Date, default: Date.now },

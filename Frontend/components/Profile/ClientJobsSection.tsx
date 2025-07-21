@@ -100,7 +100,7 @@ const ClientJobsSection: React.FC<ClientJobsSectionProps> = ({ jobs = [] }) => {
                         <Ionicons name="briefcase-outline" size={48} color={COLORS.textSecondary} />
                     </View>
                     <Text style={styles.emptyText}>No jobs posted yet</Text>
-                    <TouchableOpacity style={styles.postJobButton} onPress={() => router.push("/(protected)/(tabs)/(post)")}>
+                    <TouchableOpacity style={styles.postJobButton} onPress={() => router.push("/(protected)/(tabs)/(profile)/details/create-job")}>
                         <LinearGradient colors={[COLORS.accent, COLORS.accentSecondary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.gradientButton}>
                             <Ionicons name="add" size={20} color={COLORS.background} />
                             <Text style={styles.postJobButtonText}>Post Your First Job</Text>
@@ -157,7 +157,7 @@ const ClientJobsSection: React.FC<ClientJobsSectionProps> = ({ jobs = [] }) => {
                 ))}
 
                 {/* Add New Job Card */}
-                <TouchableOpacity style={[styles.jobCard, styles.addJobCard]} onPress={() => router.push("/(protected)/(tabs)/(post)")} activeOpacity={0.7}>
+                <TouchableOpacity style={[styles.jobCard, styles.addJobCard]} onPress={() => router.push("/(protected)/(tabs)/(profile)/details/create-job")} activeOpacity={0.7}>
                     <View style={styles.addJobContent}>
                         <View style={styles.addIconContainer}>
                             <Ionicons name="add" size={32} color={COLORS.accent} />
