@@ -24,7 +24,6 @@ export interface JobClient {
  * Job interface matching backend response
  */
 export interface Job {
-    data: Job;
     id: string;
     title: string;
     description: string;

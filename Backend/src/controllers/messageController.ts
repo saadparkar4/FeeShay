@@ -76,9 +76,7 @@ export const getMyChats = asyncHandler(async (req: AuthRequest, res: Response): 
             }
 
             // Get last message
-            const lastMessage = await Message.findOne({ chat: chat._id })
-                .sort({ sent_at: -1 })
-                .limit(1);
+            const lastMessage = await Message.findOne({ chat: chat._id }).sort({ sent_at: -1 }).limit(1);
 
             // Get unread count
             const unreadCount = await Message.countDocuments({
@@ -193,7 +191,7 @@ export const sendMessage = asyncHandler(async (req: AuthRequest, res: Response):
 
     // Send notification to the other user
     const otherUserId = chat.user1.toString() === userId.toString() ? chat.user2.toString() : chat.user1.toString();
-    
+
     // Create notification
     const notification = await Notification.create({
         user: otherUserId,

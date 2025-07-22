@@ -1,5 +1,4 @@
 import { getToken } from "./storage";
-import apiClient from "./index";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://192.168.6.37:3000/api/v1";
 
@@ -132,7 +131,7 @@ export const sendMessage = async (chatId: string, content: string, language?: st
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ content, language }),
+            body: JSON.stringify({ chat: chatId, content, language }),
         });
 
         const data = await response.json();
@@ -180,7 +179,6 @@ export const markMessagesAsRead = async (chatId: string): Promise<ApiResponse> =
 export const getUnreadCount = async (): Promise<ApiResponse<{ unreadCount: number }>> => {
     try {
         const token = await getToken();
-
         const response = await fetch(`${API_URL}/messages/unread-count`, {
             method: "GET",
             headers: {

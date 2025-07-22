@@ -80,6 +80,13 @@ export const validateMessageCreation = [
     handleValidationErrors,
 ];
 
+// export const validateMessageCreation = [
+//     // Remove this line: body("chat").isMongoId().withMessage("Valid chat ID is required"),
+//     body("content").isLength({ min: 1, max: 1000 }).withMessage("Message content must be between 1 and 1000 characters"),
+//     body("language").optional().isString().withMessage("Language must be a string"),
+//     handleValidationErrors,
+// ];
+
 // Review validation rules
 export const validateReviewCreation = [
     body("reviewee").isMongoId().withMessage("Valid reviewee ID is required"),
