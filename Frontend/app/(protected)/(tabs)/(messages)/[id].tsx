@@ -37,7 +37,7 @@ export default function ChatScreen() {
     const [sending, setSending] = useState(false);
     const [chatInfo, setChatInfo] = useState<ChatInfo | null>(null);
     const [isTyping, setIsTyping] = useState(false);
-    const typingTimeoutRef = useRef<NodeJS.Timeout>();
+    const typingTimeoutRef = useRef<number | null>(null);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
     // Fetch chat info

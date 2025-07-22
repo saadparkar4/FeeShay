@@ -216,7 +216,7 @@ export default function ProposalsScreen() {
     const transformedProposals = useMemo(() => {
         return proposals.map((p: any) => ({
             id: p._id || p.id,
-            freelancerName: userRole === "client" ? p.freelancer?.name || "Freelancer" : p.job?.client?.name || "Client",
+            freelancerName: userRole === "client" ? p.freelancer?.name || "Freelancer" : p.job?.client?.name || "Haider",
             freelancerAvatar:
                 userRole === "client"
                     ? p.freelancer?.profile_image_url || "https://www.shutterstock.com/image-vector/man-character-face-avatar-glasses-600nw-542759665.jpg"

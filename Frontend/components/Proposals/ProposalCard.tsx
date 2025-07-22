@@ -70,11 +70,11 @@ export function ProposalCard({ proposal, onViewDetails }: ProposalCardProps) {
                             <MaterialCommunityIcons name="cash-multiple" size={14} color={COLORS.accentSecondary} />
                             <Text style={styles.detailValue}>{proposal.price} KD</Text>
                         </View>
-                        {/* Duration display with clock icon */}
+                        {/* Duration display with clock icon
                         <View style={styles.detailItem}>
                             <Ionicons name="time-outline" size={14} color={COLORS.accentSecondary} />
                             <Text style={styles.detailValue}>{proposal.duration}</Text>
-                        </View>
+                        </View> */}
                     </View>
 
                     {/* Proposal Description - Limited to 2 lines for preview */}
